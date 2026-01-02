@@ -1,0 +1,1 @@
+export type RangoFecha = 'hoy' | 'semana' | 'mes' | 'todo' | 'personalizado';

@@ -1,19 +1,10 @@
 import { 
   Package, 
-  ClipboardList, 
-  FileCheck, 
+  ClipboardList,
   Settings, 
   Users
 } from 'lucide-react-native';
-
-interface MenuItem {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: any;
-  route: string;
-  children?: MenuItem[];
-}
+import { MenuItem } from '@models/MenuItem/MenuItem.types';
 
 export const menuItems: MenuItem[] = [
   {
@@ -31,13 +22,6 @@ export const menuItems: MenuItem[] = [
     route: '/administracion/estado-pedidos',
   },
   {
-    id: 'estado-requisicion',
-    title: 'Estado de Requisiciones',
-    subtitle: 'Gestión de requisiciones',
-    icon: FileCheck,
-    route: '/administracion/estado-requisicion',
-  },
-  {
     id: 'parametros-generales',
     title: 'Parámetros Generales',
     subtitle: 'Configuración general del sistema',
@@ -46,10 +30,10 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         id: 'productos',
-        title: 'Productos',
+        title: 'Nombre de productos',
         subtitle: 'Gestión de productos',
         icon: Package,
-        route: '/administracion/parametros-generales/productos',
+        route: '/administracion/parametros-generales/productoNombre',
       },
       {
         id: 'caracteristicas',

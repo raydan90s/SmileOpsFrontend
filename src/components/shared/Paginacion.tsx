@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: FontSizes.sm,
-    color: Colors.textLight,
+    color: Colors.secondary,
     marginBottom: Spacing.sm,
     textAlign: 'center',
   },

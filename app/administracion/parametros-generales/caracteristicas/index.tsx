@@ -23,6 +23,7 @@ import {
 import type { Caracteristica } from '@models/Caracteristicas/caracteristicas.types';
 
 import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
+import BackButton from '@components/shared/BackButton';
 
 export default function CaracteristicasPage() {
   const router = useRouter();
@@ -157,6 +158,9 @@ export default function CaracteristicasPage() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.header}>
+        <BackButton />
+      </View>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
@@ -164,6 +168,7 @@ export default function CaracteristicasPage() {
       >
         <ModuleHeader
           icon={Zap}
+          addButtonText="Nuevo"
           title="Gestión de Características"
           subtitle="Administre las características de productos"
           onAddClick={handleNuevo}
@@ -215,6 +220,9 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   content: {
+    padding: Spacing.md,
+  },
+  header: {
     padding: Spacing.md,
   },
   nombreText: {

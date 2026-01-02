@@ -9,17 +9,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Tag } from 'lucide-react-native';
-
 import ModuleHeader from '@components/shared/ModuleHeader';
 import SearchInput from '@components/shared/SearchInput';
 import DataTable from '@components/shared/DataTable';
 import Paginacion from '@components/shared/Paginacion';
 import LoadingSpinner from '@components/shared/LoadingSpinner';
-
 import { getAllMarcas, eliminarMarca } from '@services/Marcas/marcas.service';
 import type { Marca } from '@models/Marca/marcas.type';
-
 import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
+import BackButton from '@components/shared/BackButton';
 
 export default function MarcasPage() {
   const router = useRouter();
@@ -142,6 +140,9 @@ export default function MarcasPage() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.header}>
+        <BackButton />
+      </View>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
@@ -149,6 +150,7 @@ export default function MarcasPage() {
       >
         <ModuleHeader
           icon={Tag}
+          addButtonText="Nuevo"
           title="Gestión de Marcas"
           subtitle="Administre las marcas de productos"
           onAddClick={handleNuevo}
@@ -228,5 +230,8 @@ const styles = StyleSheet.create({
   },
   badgeTextInactive: {
     color: '#991B1B',
+  },
+  header: {
+    padding: Spacing.md,
   },
 });

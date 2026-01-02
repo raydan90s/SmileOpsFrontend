@@ -6,8 +6,8 @@ import { Package } from 'lucide-react-native';
 
 import ModuleHeader from '@components/shared/ModuleHeader';
 import LoadingSpinner from '@components/shared/LoadingSpinner';
-import ProveedoresFiltros from '@components/administracion/proveedores/ProveedoresFiltros';
-import ProveedoresList from '@components/administracion/proveedores/ProveedoresTabla';
+import ProveedoresFiltros from '@components/administracion/Proveedores/ProveedoresFiltros';
+import ProveedoresList from '@components/administracion/Proveedores/ProveedoresTabla';
 import Paginacion from '@components/shared/Paginacion';
 
 import { fetchAllProveedores, deleteProveedor } from '@services/Administracion/proveedores.service';
@@ -16,6 +16,7 @@ import type { TipoProveedor } from '@models/administracion/Proveedores/TipoProve
 import type { Proveedor } from '@models/administracion/Proveedores/Proveedor.types';
 
 import { Colors, Spacing } from '@constants/theme';
+import BackButton from '@components/shared/BackButton';
 
 export default function ProveedoresPage() {
   const router = useRouter();
@@ -100,6 +101,9 @@ export default function ProveedoresPage() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.header}>
+        <BackButton />
+      </View>
       <View style={styles.container}>
         <ModuleHeader
           icon={Package}
@@ -119,7 +123,6 @@ export default function ProveedoresPage() {
           />
         </View>
 
-        {/* FlatList con su propio scroll */}
         <View style={styles.listContainer}>
           <ProveedoresList
             proveedores={proveedoresPaginados}
@@ -165,5 +168,8 @@ const styles = StyleSheet.create({
   paginationContainer: {
     padding: Spacing.md,
     backgroundColor: Colors.surface,
+  },
+  header: {
+    padding: Spacing.md,
   },
 });

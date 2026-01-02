@@ -19,7 +19,6 @@ export default function ProveedorCard({
 }: ProveedorCardProps) {
   return (
     <View style={styles.card}>
-      {/* Header con nombre y estado */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.nombre} numberOfLines={1}>
@@ -38,7 +37,6 @@ export default function ProveedorCard({
           </View>
         </View>
 
-        {/* Tipo Badge */}
         <View style={styles.tipoBadge}>
           <Text style={styles.tipoText}>
             {proveedor.itipo_proveedor !== undefined
@@ -48,7 +46,6 @@ export default function ProveedorCard({
         </View>
       </View>
 
-      {/* Info Section */}
       <View style={styles.infoSection}>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>RUC:</Text>
@@ -66,13 +63,12 @@ export default function ProveedorCard({
 
         {proveedor.vtelefono && (
           <View style={styles.infoRow}>
-            <Phone size={16} color={Colors.textLight} />
+            <Phone size={16} color={Colors.primary} />
             <Text style={styles.infoValue}>{proveedor.vtelefono}</Text>
           </View>
         )}
       </View>
 
-      {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.actionButton, styles.editButton]}
@@ -170,7 +166,7 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: FontSizes.sm,
     fontWeight: '600',
-    color: Colors.textLight,
+    color: Colors.primary,
   },
   infoValue: {
     fontSize: FontSizes.sm,

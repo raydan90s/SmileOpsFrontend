@@ -66,9 +66,6 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   pageHeader: {
     flexDirection: 'row',
@@ -97,7 +94,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: FontSizes.sm,
-    color: Colors.textLight,
+    color: Colors.secondary,
     marginTop: 2,
   },
   content: {
@@ -136,7 +133,7 @@ const styles = StyleSheet.create({
   },
   menuSubtitle: {
     fontSize: FontSizes.xs,
-    color: Colors.textLight,
+    color: Colors.secondary,
     marginTop: 2,
   },
 });

@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: FontSizes.sm,
-    color: Colors.textLight,
+    color: Colors.secondary,
   },
   addButton: {
     flexDirection: 'row',

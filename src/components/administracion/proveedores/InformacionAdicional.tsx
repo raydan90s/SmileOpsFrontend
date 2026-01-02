@@ -40,7 +40,6 @@ export default function InformacionAdicional({
       </View>
 
       <View style={styles.sectionContent}>
-        {/* Tipo de Proveedor */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Tipo de Proveedor <Text style={styles.required}>*</Text>
@@ -68,7 +67,6 @@ export default function InformacionAdicional({
           )}
         </View>
 
-        {/* Teléfono */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Teléfono</Text>
           <TextInput
@@ -81,7 +79,6 @@ export default function InformacionAdicional({
           />
         </View>
 
-        {/* Email */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Email</Text>
           <TextInput
@@ -96,7 +93,6 @@ export default function InformacionAdicional({
           {errors.vemail && <Text style={styles.errorText}>{errors.vemail}</Text>}
         </View>
 
-        {/* Activo */}
         <View style={styles.switchContainer}>
           <Text style={styles.label}>Proveedor activo</Text>
           <Switch
@@ -107,7 +103,6 @@ export default function InformacionAdicional({
           />
         </View>
 
-        {/* Botón Guardar */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.saveButton, loading && styles.saveButtonDisabled]}
