@@ -2,12 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Building2, MapPin } from 'lucide-react-native';
 import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
-
-interface Establecimiento {
-  tipo: 'Matriz' | 'Sucursal';
-  direccion: string;
-  numeroEstablecimiento: string;
-}
+import { Establecimiento } from '@models/Establecimiento/Establecimiento.types';
 
 interface DatosSRIProps {
   razonSocial: string;
@@ -22,7 +17,6 @@ export default function DatosSRI({ razonSocial, establecimientos }: DatosSRIProp
       </View>
 
       <View style={styles.sectionContent}>
-        {/* Razón Social */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Razón Social <Text style={styles.required}>*</Text>
@@ -32,7 +26,6 @@ export default function DatosSRI({ razonSocial, establecimientos }: DatosSRIProp
           </View>
         </View>
 
-        {/* Establecimientos */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Establecimientos Activos ({establecimientos.length})
@@ -128,7 +121,7 @@ const styles = StyleSheet.create({
   },
   inputDisabledText: {
     fontSize: FontSizes.md,
-    color: Colors.textLight,
+    color: Colors.primary,
   },
   establecimientosList: {
     gap: Spacing.sm,
@@ -180,7 +173,7 @@ const styles = StyleSheet.create({
   },
   numeroEstablecimiento: {
     fontSize: FontSizes.xs,
-    color: Colors.textLight,
+    color: Colors.primary,
   },
   direccionText: {
     fontSize: FontSizes.sm,

@@ -9,27 +9,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Package } from 'lucide-react-native';
-
 import BackButton from '@components/shared/BackButton';
 import SuccessModal from '@components/shared/SuccessModal';
-import ConsultaRUC from '@components/administracion/proveedores/ConsultaRUC';
-import DatosSRI from '@components/administracion/proveedores/DatosSRI';
-import InformacionAdicional from '@components/administracion/proveedores/InformacionAdicional';
-
+import ConsultaRUC from '@components/administracion/Proveedores/ConsultaRUC';
+import DatosSRI from '@components/administracion/Proveedores/DatosSRI';
+import InformacionAdicional from '@components/administracion/Proveedores/InformacionAdicional';
 import { consultaSRI_Direct } from '@services/Administracion/sri.service';
 import { createProveedor } from '@services/Administracion/proveedores.service';
 import { fetchAllTiposProveedor } from '@services/Administracion/tiposProveedor.service';
-
 import type { SriData } from '@models/administracion/Proveedores/ConsultaProveedor.types';
 import type { TipoProveedor } from '@models/administracion/Proveedores/TipoProveedor.types';
-
 import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
-
-interface Establecimiento {
-  tipo: 'Matriz' | 'Sucursal';
-  direccion: string;
-  numeroEstablecimiento: string;
-}
+import { Establecimiento } from '@models/Establecimiento/Establecimiento.types';
 
 interface FormData {
   vnombre: string;
@@ -40,7 +31,6 @@ interface FormData {
   itipo_proveedor: number | '';
   bactivo: boolean;
 }
-
 export default function CrearProveedor() {
   const router = useRouter();
 
@@ -215,7 +205,6 @@ export default function CrearProveedor() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.pageHeader}>
           <View style={styles.iconContainer}>
             <Package size={24} color={Colors.textInverse} />
@@ -228,7 +217,6 @@ export default function CrearProveedor() {
           </View>
         </View>
 
-        {/* Consulta RUC */}
         <ConsultaRUC
           vruc={formData.vruc}
           onRucChange={handleRucChange}
@@ -240,13 +228,11 @@ export default function CrearProveedor() {
 
         {datosConsultados && (
           <>
-            {/* Datos SRI */}
             <DatosSRI
               razonSocial={formData.vnombre}
               establecimientos={formData.establecimientos}
             />
 
-            {/* Información Adicional */}
             <InformacionAdicional
               formData={{
                 itipo_proveedor: formData.itipo_proveedor,
@@ -284,9 +270,6 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   container: {
     flex: 1,
@@ -321,6 +304,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: FontSizes.sm,
-    color: Colors.textLight,
+    color: Colors.secondary,
   },
 });

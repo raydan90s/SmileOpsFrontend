@@ -22,7 +22,6 @@ export default function ConsultaRUC({
 }: ConsultaRUCProps) {
   return (
     <View style={styles.container}>
-      {/* Alert */}
       <View style={styles.alert}>
         <AlertCircle size={20} color="#D97706" style={styles.alertIcon} />
         <View style={styles.alertTextContainer}>
@@ -33,7 +32,6 @@ export default function ConsultaRUC({
         </View>
       </View>
 
-      {/* Consulta Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>CONSULTA RUC - SRI</Text>

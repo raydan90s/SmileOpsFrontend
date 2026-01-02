@@ -81,7 +81,6 @@ export default function CrearCaracteristica() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Page Header */}
         <View style={styles.pageHeaderContainer}>
           <View style={styles.pageHeader}>
             <View style={styles.iconContainer}>
@@ -96,7 +95,6 @@ export default function CrearCaracteristica() {
           </View>
         </View>
 
-        {/* Form Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>DATOS DE LA CARACTERÍSTICA</Text>
@@ -104,7 +102,6 @@ export default function CrearCaracteristica() {
 
           <View style={styles.sectionContent}>
             <View style={styles.formContent}>
-              {/* Nombre */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>
                   Nombre de la Característica <Text style={styles.required}>*</Text>
@@ -121,7 +118,6 @@ export default function CrearCaracteristica() {
                 />
               </View>
 
-              {/* Activo */}
               <View style={styles.switchContainer}>
                 <Text style={styles.label}>Activo</Text>
                 <Switch
@@ -136,7 +132,6 @@ export default function CrearCaracteristica() {
               </View>
             </View>
 
-            {/* Buttons */}
             <View style={styles.buttonsContainer}>
               <TouchableOpacity
                 style={[styles.cancelButton, loading && styles.buttonDisabled]}
@@ -179,9 +174,6 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   container: {
     flex: 1,
@@ -216,7 +208,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: FontSizes.sm,
-    color: Colors.textLight,
+    color: Colors.secondary,
     marginTop: 2,
   },
   section: {

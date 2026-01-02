@@ -17,7 +17,7 @@ import { Picker } from '@react-native-picker/picker';
 import BackButton from '@components/shared/BackButton';
 import LoadingSpinner from '@components/shared/LoadingSpinner';
 import SuccessModal from '@components/shared/SuccessModal';
-import DireccionItem from '@components/administracion/proveedores/DireccionItem';
+import DireccionItem from '@components/administracion/Proveedores/DireccionItem';
 
 import {
   getProveedorById,
@@ -256,7 +256,6 @@ export default function EditarProveedor() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.pageHeader}>
           <View style={styles.iconContainer}>
             <Package size={24} color={Colors.textInverse} />
@@ -267,14 +266,12 @@ export default function EditarProveedor() {
           </View>
         </View>
 
-        {/* Información General */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>INFORMACIÓN GENERAL</Text>
           </View>
 
           <View style={styles.sectionContent}>
-            {/* Nombre */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 Nombre <Text style={styles.required}>*</Text>
@@ -291,7 +288,6 @@ export default function EditarProveedor() {
               )}
             </View>
 
-            {/* RUC */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 RUC <Text style={styles.required}>*</Text>
@@ -308,7 +304,6 @@ export default function EditarProveedor() {
               {errors.vruc && <Text style={styles.errorText}>{errors.vruc}</Text>}
             </View>
 
-            {/* Tipo de Proveedor */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 Tipo de Proveedor <Text style={styles.required}>*</Text>
@@ -341,7 +336,6 @@ export default function EditarProveedor() {
               )}
             </View>
 
-            {/* Teléfono */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Teléfono</Text>
               <TextInput
@@ -354,7 +348,6 @@ export default function EditarProveedor() {
               />
             </View>
 
-            {/* Email */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
               <TextInput
@@ -371,7 +364,6 @@ export default function EditarProveedor() {
               )}
             </View>
 
-            {/* Activo */}
             <View style={styles.switchContainer}>
               <Text style={styles.label}>Proveedor activo</Text>
               <Switch
@@ -384,7 +376,6 @@ export default function EditarProveedor() {
           </View>
         </View>
 
-        {/* Direcciones */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderWithButton}>
             <Text style={styles.sectionTitle}>DIRECCIONES</Text>
@@ -433,7 +424,6 @@ export default function EditarProveedor() {
           </View>
         </View>
 
-        {/* Botón Guardar */}
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           onPress={handleSubmit}

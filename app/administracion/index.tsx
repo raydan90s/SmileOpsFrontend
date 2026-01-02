@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@constants/theme';
 import { menuItems } from '@data/SubModulos/administracion';
+import BackButton from '@components/shared/BackButton';
 
 export default function AdministracionHome() {
   const router = useRouter();
@@ -19,6 +20,9 @@ export default function AdministracionHome() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.headerButton}>
+        <BackButton />
+      </View>
       <View style={styles.header}>
         <Text style={styles.title}>Módulo de Administración</Text>
         <Text style={styles.subtitle}>Seleccione una opción</Text>
@@ -37,7 +41,7 @@ export default function AdministracionHome() {
               <View style={styles.iconContainer}>
                 <Icon size={32} color={Colors.primary} strokeWidth={2} />
               </View>
-              
+
               <View style={styles.textContainer}>
                 <View style={styles.titleRow}>
                   <Text style={styles.menuTitle}>{item.title}</Text>
@@ -78,7 +82,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: FontSizes.md,
-    color: Colors.textLight,
+    color: Colors.primary,
   },
   content: {
     padding: Spacing.md,
@@ -132,7 +136,10 @@ const styles = StyleSheet.create({
   },
   menuSubtitle: {
     fontSize: FontSizes.sm,
-    color: Colors.textLight,
+    color: Colors.secondary,
     marginTop: 2,
+  },
+  headerButton: {
+    padding: Spacing.md,
   },
 });

@@ -99,7 +99,6 @@ export default function EditarCaracteristica() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.pageHeader}>
           <View style={styles.iconContainer}>
             <Zap size={24} color={Colors.textInverse} />
@@ -112,14 +111,12 @@ export default function EditarCaracteristica() {
           </View>
         </View>
 
-        {/* Form Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>DATOS DE LA CARACTERÍSTICA</Text>
           </View>
 
           <View style={styles.sectionContent}>
-            {/* Nombre */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 Nombre de la Característica <Text style={styles.required}>*</Text>
@@ -136,7 +133,6 @@ export default function EditarCaracteristica() {
               />
             </View>
 
-            {/* Activo */}
             <View style={styles.switchContainer}>
               <Text style={styles.label}>Activo</Text>
               <Switch
@@ -152,7 +148,6 @@ export default function EditarCaracteristica() {
           </View>
         </View>
 
-        {/* Buttons */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={[styles.cancelButton, saving && styles.buttonDisabled]}
