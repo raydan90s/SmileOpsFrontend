@@ -1,8 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Trash2, Package } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, FontSizes } from '@constants/theme';
 import type { ProductoTratamiento } from '@models/Tratamiento/Tratamiento.types';
+
+const InputNumerico = ({ 
+  valor, 
+  onChange, 
+  style 
+}: { 
+  valor: number | undefined | null, 
+  onChange: (val: number) => void, 
+  style?: any 
+}) => {
+  const [texto, setTexto] = useState(valor?.toString() || '');
+
+  useEffect(() => {
+    const numTexto = parseFloat(texto);
+    const numValor = valor || 0;
+    
+    if (numTexto !== numValor && !texto.endsWith('.') && !texto.endsWith(',')) {
+      setTexto(numValor.toString());
+    }
+  }, [valor]);
+
+  const handleChange = (text: string) => {
+    let nuevoTexto = text.replace(',', '.');
+
+    if (/^\d*\.?\d*$/.test(nuevoTexto)) {
+      setTexto(nuevoTexto);
+
+      if (nuevoTexto === '' || nuevoTexto === '.') {
+        onChange(0);
+      } else {
+        const numero = parseFloat(nuevoTexto);
+        if (!isNaN(numero)) {
+          onChange(numero);
+        }
+      }
+    }
+  };
+
+  return (
+    <TextInput
+      style={style}
+      keyboardType="numeric"
+      value={texto}
+      onChangeText={handleChange}
+      placeholder="0"
+    />
+  );
+};
 
 interface TablaProductosTratamientoProps {
   productos: ProductoTratamiento[];
@@ -116,35 +164,22 @@ const TablaProductosTratamiento: React.FC<TablaProductosTratamientoProps> = ({
     }).format(precio);
   };
 
-  const handleCantidadChange = (id: string, valor: string) => {
-    if (!onEditarCantidad) return;
-    const nuevaCantidad = parseFloat(valor);
-    if (!isNaN(nuevaCantidad) && nuevaCantidad >= 0) {
+  
+  const handleCantidadChange = (id: string, nuevaCantidad: number) => {
+    if (onEditarCantidad) {
       onEditarCantidad(id, nuevaCantidad);
-    } else if (valor === '') {
-      onEditarCantidad(id, 0);
     }
   };
 
-  const handleCantidadRecibidaChange = (id: string, valor: string) => {
-    if (!onEditarCantidadRecibida) return;
-    if (valor === '') {
-      onEditarCantidadRecibida(id, NaN);
-      return;
-    }
-    const nuevaCantidad = parseFloat(valor);
-    if (!isNaN(nuevaCantidad) && nuevaCantidad >= 0) {
+  const handleCantidadRecibidaChange = (id: string, nuevaCantidad: number) => {
+    if (onEditarCantidadRecibida) {
       onEditarCantidadRecibida(id, nuevaCantidad);
     }
   };
 
-  const handlePrecioChange = (id: string, valor: string) => {
-    if (!onEditarPrecio) return;
-    const nuevoPrecio = parseFloat(valor);
-    if (!isNaN(nuevoPrecio) && nuevoPrecio >= 0) {
+  const handlePrecioChange = (id: string, nuevoPrecio: number) => {
+    if (onEditarPrecio) {
       onEditarPrecio(id, nuevoPrecio);
-    } else if (valor === '') {
-      onEditarPrecio(id, 0);
     }
   };
 
@@ -206,11 +241,10 @@ const TablaProductosTratamiento: React.FC<TablaProductosTratamientoProps> = ({
                 <View style={styles.gridItem}>
                   <Text style={styles.label}>{labelCantidad}</Text>
                   {permitirEditarCantidad ? (
-                    <TextInput
+                    <InputNumerico
                       style={styles.input}
-                      keyboardType="numeric"
-                      value={producto.cantidad ? producto.cantidad.toString() : ''}
-                      onChangeText={(val) => handleCantidadChange(producto.id, val)}
+                      valor={producto.cantidad}
+                      onChange={(val) => handleCantidadChange(producto.id, val)}
                     />
                   ) : (
                     <Text style={styles.value}>{producto.cantidad}</Text>
@@ -226,11 +260,10 @@ const TablaProductosTratamiento: React.FC<TablaProductosTratamientoProps> = ({
                   <View style={styles.gridItem}>
                     <Text style={styles.label}>Recibido</Text>
                     {permitirEditarCantidadRecibida ? (
-                      <TextInput
+                      <InputNumerico
                         style={[styles.input, { borderColor: Colors.success }]}
-                        keyboardType="numeric"
-                        value={Number.isNaN(cantidadRecibida) ? '' : (cantidadRecibida ?? producto.cantidad).toString()}
-                        onChangeText={(val) => handleCantidadRecibidaChange(producto.id, val)}
+                        valor={cantidadRecibida ?? producto.cantidad}
+                        onChange={(val) => handleCantidadRecibidaChange(producto.id, val)}
                       />
                     ) : (
                       <Text style={styles.value}>{cantidadRecibida ?? producto.cantidad}</Text>
@@ -244,11 +277,10 @@ const TablaProductosTratamiento: React.FC<TablaProductosTratamientoProps> = ({
                   <View style={styles.priceItem}>
                     <Text style={styles.label}>P. Unit</Text>
                     {permitirEditarPrecio ? (
-                      <TextInput
+                      <InputNumerico
                         style={styles.input}
-                        keyboardType="numeric"
-                        value={precioBase ? precioBase.toString() : ''}
-                        onChangeText={(val) => handlePrecioChange(producto.id, val)}
+                        valor={precioBase}
+                        onChange={(val) => handlePrecioChange(producto.id, val)}
                       />
                     ) : (
                       <Text style={styles.value}>{formatearPrecio(precioBase)}</Text>

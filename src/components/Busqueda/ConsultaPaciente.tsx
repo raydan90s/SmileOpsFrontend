@@ -13,6 +13,7 @@ export default function BusquedaPaciente({
   mostrarMensajeAyuda = true,
   mostrarBotonHistorial = true,
   resetear = false,
+  onPacienteSeleccionado,
 }: BusquedaPacienteProps) {
   const {
     state,
@@ -22,6 +23,7 @@ export default function BusquedaPaciente({
     handleSeleccionarPaciente,
     resetearBusqueda,
   } = useBusquedaPaciente({
+    onPacienteSeleccionado,
   });
 
   const tipoInfo = getTipoInfo();
@@ -30,7 +32,7 @@ export default function BusquedaPaciente({
     if (resetear && resetearBusqueda) {
       resetearBusqueda();
     }
-  }, [resetear, resetearBusqueda]);
+  }, [resetear]);
 
   const renderIconoTipo = () => {
     switch (state.tipoBusqueda) {

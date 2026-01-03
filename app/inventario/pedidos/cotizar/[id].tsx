@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { ShoppingCart } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 import FormularioProducto from '@components/Inventario/Pedidos/FormularioProducto';
 import TablaProductosTratamiento from '@components/Inventario/Pedidos/TablaProductosTratamiento';
 import ModalExito from '@components/shared/ModalExito';
@@ -10,29 +10,30 @@ import ModalError from '@components/shared/ModalError';
 import FormularioEncabezadoPedido from '@components/Inventario/Pedidos/FormularioEncabezadoPedido';
 import SelectorTipoBodega from '@components/Inventario/Pedidos/SelectorTipoBodega';
 import CampoObservaciones from '@components/shared/CampoObservaciones';
-
 import { getProductoByCodigo } from '@services/InventarioProductos/inventarioProductos.service';
 import {
   createPedido,
   fetchTiposPedido,
   fetchNextPedidoId,
   getPedidoById,
-  cotizarPedido
+  cotizarPedido,
+  aprobarCotizacionFinal
 } from '@services/Pedidos/Pedidos.service';
 import { fetchBodegasPrincipales } from '@services/Bodegas/bodegas.service';
 import { fetchAllProveedores } from '@services/Proveedores/Proveedores.service';
-
 import type { ProductoTratamiento } from '@models/Tratamiento/Tratamiento.types';
 import type { TipoPedido } from '@models/Pedidos/Pedidos.types';
 import type { Bodega } from '@models/Bodegas/Bodegas.types';
 import type { Proveedor } from '@models/Proveedores/Proveedores.types';
-
 import { Colors, Spacing, BorderRadius, FontSizes, Shadows } from '@constants/theme';
+import BackButton from '@components/shared/BackButton';
+import { useAuth } from '@context/AuthContext';
 
 const CotizarOrdenPedidoPage: React.FC = () => {
+  const { usuario } = useAuth();
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  
+
   const pedidoId = Array.isArray(id) ? id[0] : id;
   const modoEdicion = !!pedidoId;
 
@@ -78,7 +79,7 @@ const CotizarOrdenPedidoPage: React.FC = () => {
           const productosConDetalles = await Promise.all(
             pedido.detalles.map(async (detalle: any) => {
               const producto = await getProductoByCodigo(detalle.codigo_producto);
-              
+
               return {
                 id: detalle.iid_pedido_det.toString(),
                 iid_inventario: detalle.iid_inventario,
@@ -209,6 +210,12 @@ const CotizarOrdenPedidoPage: React.FC = () => {
       }
     }
 
+    if (modoEdicion && !usuario?.iid) {
+      setMensajeError('No se identificó al usuario. Inicie sesión nuevamente.');
+      setModalErrorAbierto(true);
+      return;
+    }
+
     setGuardando(true);
 
     try {
@@ -224,6 +231,11 @@ const CotizarOrdenPedidoPage: React.FC = () => {
           iid_proveedor: parseInt(proveedorSeleccionado),
           v_observaciones: observaciones.trim() || undefined,
         });
+
+        await aprobarCotizacionFinal(parseInt(pedidoId), {
+          v_observaciones: observaciones.trim() || undefined
+        });
+
         setModalExitoAbierto(true);
 
       } else {
@@ -243,6 +255,7 @@ const CotizarOrdenPedidoPage: React.FC = () => {
         const pedidoData = {
           iid_tipo_pedido: parseInt(tipoPedidoSeleccionado),
           iid_bodega_destino: parseInt(bodegaSeleccionada),
+          v_observaciones: observaciones.trim() || undefined,
           detalles: productosConIds
         };
 
@@ -255,7 +268,8 @@ const CotizarOrdenPedidoPage: React.FC = () => {
       }
 
     } catch (error: any) {
-      setMensajeError(error.message || 'Error al guardar el pedido');
+      console.error('❌ Error en handleGuardarPedido:', error);
+      setMensajeError(error.message || 'Ocurrió un error al procesar la solicitud');
       setModalErrorAbierto(true);
     } finally {
       setGuardando(false);
@@ -274,7 +288,7 @@ const CotizarOrdenPedidoPage: React.FC = () => {
 
   const proveedoresAdaptados = proveedores.map(prov => ({
     id: prov.iid_proveedor,
-    descripcion: prov.vnombre 
+    descripcion: prov.vnombre
   }));
 
   if (loading) {
@@ -297,8 +311,12 @@ const CotizarOrdenPedidoPage: React.FC = () => {
   const isFormValid = tipoPedidoSeleccionado && bodegaSeleccionada && (!modoEdicion || proveedorSeleccionado);
 
   return (
-    <View style={styles.mainContainer}>
-      <ScrollView 
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <BackButton />
+      </View>
+
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -316,30 +334,30 @@ const CotizarOrdenPedidoPage: React.FC = () => {
             tipoOnChange={setTipoPedidoSeleccionado}
             tipoLabel="Tipo de Pedido"
             disabled={modoEdicion}
-            
+
             bodegaOptions={bodegasAdaptadas}
             bodegaValue={bodegaSeleccionada}
             bodegaOnChange={setBodegaSeleccionada}
             bodegaLabel="Bodega Destino"
-            
+
             loading={loading}
           />
 
           {modoEdicion && (
             <View style={styles.proveedorContainer}>
               <SelectorTipoBodega
-                 showTipo={false} 
-                 showBodega={true}
-                 
-                 tipoOptions={[]} 
-                 tipoValue="" 
-                 tipoOnChange={() => {}}
+                showTipo={false}
+                showBodega={true}
 
-                 bodegaLabel="Proveedor"
-                 bodegaPlaceholder="Seleccione un proveedor"
-                 bodegaOptions={proveedoresAdaptados}
-                 bodegaValue={proveedorSeleccionado}
-                 bodegaOnChange={setProveedorSeleccionado}
+                tipoOptions={[]}
+                tipoValue=""
+                tipoOnChange={() => { }}
+
+                bodegaLabel="Proveedor"
+                bodegaPlaceholder="Seleccione un proveedor"
+                bodegaOptions={proveedoresAdaptados}
+                bodegaValue={proveedorSeleccionado}
+                bodegaOnChange={setProveedorSeleccionado}
               />
             </View>
           )}
@@ -417,18 +435,21 @@ const CotizarOrdenPedidoPage: React.FC = () => {
         mensaje={mensajeError}
         titulo="¡Atención!"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  safeArea: {
     flex: 1,
     backgroundColor: Colors.background,
   },
+  header: {
+    padding: Spacing.md,
+  },
   scrollContent: {
     padding: Spacing.md,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl * 2,
   },
   loadingContainer: {
     flex: 1,
@@ -457,21 +478,21 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   contentContainer: {
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
   footerContainer: {
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
+    marginTop: Spacing.xl,
+    paddingTop: Spacing.lg,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
   submitButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.sm,
+    ...Shadows.md,
   },
   submitButtonDisabled: {
     backgroundColor: Colors.border,

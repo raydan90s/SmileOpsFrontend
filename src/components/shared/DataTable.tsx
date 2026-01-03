@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { Edit, Trash2 } from 'lucide-react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
+import CardList from '@components/shared/CardList';
+import ItemCard from '@components/shared/ItemCard';
 
 interface Column<T> {
   key: string;
@@ -19,6 +20,11 @@ interface DataTableProps<T> {
   getItemId: (item: T) => number | string;
   emptyMessage?: string;
   showActions?: boolean;
+  getTitleField: (item: T) => string;
+  getBadge?: (item: T) => { text: string; color: string; backgroundColor: string } | undefined;
+  getSecondaryBadge?: (item: T) => { text: string; color: string; backgroundColor: string } | undefined;
+  getIsActive?: (item: T) => boolean;
+  onActivate?: (item: T) => void;
 }
 
 export default function DataTable<T>({
@@ -29,83 +35,54 @@ export default function DataTable<T>({
   onDelete,
   getItemId,
   emptyMessage = 'No se encontraron registros',
-  showActions = true,
+  getTitleField,
+  getBadge,
+  getSecondaryBadge,
+  getIsActive,
+  onActivate,
 }: DataTableProps<T>) {
-  const renderHeader = () => (
-    <View style={styles.tableHeader}>
-      {columns.map((column) => (
-        <View key={column.key} style={[styles.headerCell, { flex: column.width || 1 }]}>
-          <Text style={styles.headerText}>{column.label}</Text>
-        </View>
-      ))}
-      {showActions && (
-        <View style={[styles.headerCell, styles.actionsCell]}>
-          <Text style={styles.headerText}>Acciones</Text>
-        </View>
-      )}
-    </View>
-  );
-
-  const renderRow = ({ item }: { item: T }) => (
-    <View style={styles.row}>
-      {columns.map((column) => (
-        <View key={column.key} style={[styles.cell, { flex: column.width || 1 }]}>
-          {column.render ? (
-            column.render(item)
-          ) : (
-            <Text style={styles.cellText}>{(item as any)[column.key]}</Text>
-          )}
-        </View>
-      ))}
-      {showActions && (
-        <View style={[styles.cell, styles.actionsCell]}>
-          <View style={styles.actionsContainer}>
-            {onEdit && (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.editButton]}
-                onPress={() => onEdit(item)}
-                activeOpacity={0.7}
-              >
-                <Edit size={18} color="#1E40AF" />
-              </TouchableOpacity>
-            )}
-            {onDelete && (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
-                onPress={() => onDelete(item)}
-                activeOpacity={0.7}
-              >
-                <Trash2 size={18} color="#B91C1C" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      )}
-    </View>
-  );
-
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>{emptyMessage}</Text>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
       </View>
 
-      {renderHeader()}
+      <View style={styles.content}>
+        <CardList
+          data={data}
+          keyExtractor={(item) => String(getItemId(item))}
+          emptyTitle={emptyMessage}
+          emptySubtitle="No hay datos para mostrar"
+          renderItem={(item) => {
+            const infoFields = columns
+              .filter((col) => col.key !== getTitleField(item))
+              .map((col) => {
+                if (col.render) {
+                  return null;
+                }
+                return {
+                  label: `${col.label}:`,
+                  value: String((item as any)[col.key] || '-'),
+                };
+              })
+              .filter(Boolean) as Array<{ label?: string; value: string; icon?: React.ReactNode }>;
 
-      <FlatList
-        data={data}
-        renderItem={renderRow}
-        keyExtractor={(item) => String(getItemId(item))}
-        ListEmptyComponent={renderEmpty}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        scrollEnabled={false}
-      />
+            return (
+              <ItemCard
+                title={getTitleField(item)}
+                badge={getBadge?.(item)}
+                secondaryBadge={getSecondaryBadge?.(item)}
+                infoFields={infoFields}
+                isActive={getIsActive?.(item) ?? true}
+                onEdit={() => onEdit?.(item)}
+                onDelete={onDelete ? () => onDelete(item) : undefined}
+                onActivate={onActivate ? () => onActivate(item) : undefined}
+                showActivate={!!onActivate}
+              />
+            );
+          }}
+        />
+      </View>
     </View>
   );
 }
@@ -127,63 +104,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.textInverse,
   },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: Colors.backgroundLight,
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.border,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-  },
-  headerCell: {
-    justifyContent: 'center',
-  },
-  headerText: {
-    fontSize: FontSizes.sm,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  row: {
-    flexDirection: 'row',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
+  content: {
     backgroundColor: Colors.surface,
-  },
-  cell: {
-    justifyContent: 'center',
-  },
-  cellText: {
-    fontSize: FontSizes.sm,
-    color: Colors.text,
-  },
-  actionsCell: {
-    width: 100,
-    alignItems: 'center',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  actionButton: {
-    padding: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-  },
-  editButton: {
-    backgroundColor: '#DBEAFE',
-  },
-  deleteButton: {
-    backgroundColor: '#FEE2E2',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: Colors.border,
-  },
-  emptyContainer: {
-    paddingVertical: Spacing.xl,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: FontSizes.sm,
-    color: Colors.textLight,
   },
 });

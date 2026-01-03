@@ -45,6 +45,7 @@ export default function CrearCaracteristica() {
     try {
       setLoading(true);
       await crearCaracteristica(formData);
+      setLoading(false);
       setModalExito({
         visible: true,
         titulo: '¡Registro Exitoso!',

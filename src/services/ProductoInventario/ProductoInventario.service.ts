@@ -189,3 +189,24 @@ export async function eliminarProducto(id: number): Promise<ProductoInventario> 
     throw err;
   }
 }
+
+export async function activarProducto(id: number): Promise<ProductoInventario> {
+  try {
+    const res = await fetchWithAuth(`${ENDPOINT}/${id}/activar`, { method: 'PUT' });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: 'Error desconocido' }));
+      throw new Error(errorData.message || 'Error al activar producto');
+    }
+
+    const responseData = await res.json();
+    if (!responseData.success || !responseData.data) {
+      throw new Error('Respuesta inválida');
+    }
+    
+    return responseData.data;
+  } catch (err) {
+    console.error('Error activarProducto:', err);
+    throw err;
+  }
+}

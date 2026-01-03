@@ -45,6 +45,7 @@ export default function CrearProducto() {
     try {
       setLoading(true);
       await crearProductoNombre(formData);
+      setLoading(false);
       setModalExito({
         visible: true,
         titulo: '¡Registro Exitoso!',

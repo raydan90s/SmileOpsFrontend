@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ShoppingCart, ArrowLeft, CheckCircle } from 'lucide-react-native';
 import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@constants/theme';
-
 import type { ProductoTratamiento } from '@models/Tratamiento/Tratamiento.types';
 import { getProductoByCodigo } from '@services/InventarioProductos/inventarioProductos.service';
 import {
@@ -32,6 +31,7 @@ import { useAuth } from '@context/AuthContext';
 import type { DatosFactura } from '@models/FacturaPedido/FacturaPedido.types';
 import type { EntidadFacturadora } from '@models/FacturaPedido/EntidadesFacturadoras.types';
 import { fetchAllEntidades } from '@services/EntidadesFacturadoras/EntidadesFacturadoras.service';
+import SeccionFacturaPedido from '@components/Inventario/Pedidos/SeccionFacturaPedido';
 
 const RecibirPedido: React.FC = () => {
     const router = useRouter();
@@ -488,6 +488,25 @@ const RecibirPedido: React.FC = () => {
                         </View>
                     </View>
 
+
+
+                    {tieneFactura && (
+                        <SeccionFacturaPedido
+                            value={datosFactura}
+                            onChange={setDatosFactura}
+                            entidades={entidadesFacturadoras}
+
+                            tieneFactura={tieneFactura}
+                            onTieneFacturaChange={setTieneFactura}
+
+                            subtotalBase0={calcularTotalesFactura.subtotalBase0}
+                            subtotalBaseIVA={calcularTotalesFactura.subtotalBaseIVA}
+                            subtotalTotal={calcularTotalesFactura.subtotalTotal}
+                            ivaTotal={calcularTotalesFactura.ivaTotal}
+                            totalGeneral={calcularTotalesFactura.totalGeneral}
+                        />
+                    )}
+
                     <View style={styles.observacionesSection}>
                         <Text style={styles.label}>Observaciones</Text>
                         <TextInput
@@ -506,6 +525,7 @@ const RecibirPedido: React.FC = () => {
                             <TouchableOpacity
                                 style={[styles.button, styles.buttonSecondary]}
                                 onPress={() => setTieneFactura(!tieneFactura)}
+                                activeOpacity={0.7}
                             >
                                 <Text style={styles.buttonSecondaryText}>
                                     {tieneFactura ? '✓ Con Factura' : 'Sin Factura'}
@@ -514,25 +534,39 @@ const RecibirPedido: React.FC = () => {
 
                             {tieneFactura ? (
                                 <TouchableOpacity
-                                    style={[styles.button, styles.buttonSuccess, (guardando || !datosFactura.iid_entidad_facturadora) && styles.buttonDisabled]}
+                                    style={[
+                                        styles.button,
+                                        styles.buttonSuccess,
+                                        (guardando || !datosFactura.iid_entidad_facturadora || !datosFactura.v_numero_factura || !datosFactura.d_fecha_factura) && styles.buttonDisabled
+                                    ]}
                                     onPress={handleRegistrarFactura}
-                                    disabled={guardando || !datosFactura.iid_entidad_facturadora}
+                                    disabled={guardando || !datosFactura.iid_entidad_facturadora || !datosFactura.v_numero_factura || !datosFactura.d_fecha_factura}
+                                    activeOpacity={0.7}
                                 >
-                                    <ShoppingCart size={20} color="#fff" />
-                                    <Text style={styles.buttonText}>
-                                        {guardando ? 'Procesando...' : 'Registrar Factura y Recibir'}
-                                    </Text>
+                                    {guardando ? (
+                                        <ActivityIndicator size="small" color="#fff" />
+                                    ) : (
+                                        <>
+                                            <ShoppingCart size={20} color="#fff" />
+                                            <Text style={styles.buttonText}>Registrar Factura y Recibir</Text>
+                                        </>
+                                    )}
                                 </TouchableOpacity>
                             ) : (
                                 <TouchableOpacity
                                     style={[styles.button, styles.buttonPrimary, guardando && styles.buttonDisabled]}
                                     onPress={handleGuardarRecepcion}
                                     disabled={guardando}
+                                    activeOpacity={0.7}
                                 >
-                                    <CheckCircle size={20} color="#fff" />
-                                    <Text style={styles.buttonText}>
-                                        {guardando ? 'Guardando...' : 'Marcar como Recibido'}
-                                    </Text>
+                                    {guardando ? (
+                                        <ActivityIndicator size="small" color="#fff" />
+                                    ) : (
+                                        <>
+                                            <CheckCircle size={20} color="#fff" />
+                                            <Text style={styles.buttonText}>Marcar como Recibido</Text>
+                                        </>
+                                    )}
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -562,7 +596,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: Spacing.md,
         fontSize: FontSizes.md,
-        color: Colors.textLight,
+        color: Colors.secondary,
     },
     content: {
         flex: 1,
@@ -623,7 +657,7 @@ const styles = StyleSheet.create({
     label: {
         fontSize: FontSizes.sm,
         fontWeight: '600',
-        color: Colors.textLight,
+        color: Colors.secondary,
         marginBottom: Spacing.xs,
     },
     value: {
@@ -657,7 +691,7 @@ const styles = StyleSheet.create({
     },
     productCode: {
         fontSize: FontSizes.xs,
-        color: Colors.textLight,
+        color: Colors.secondary,
     },
     productDetails: {
         gap: Spacing.xs,
@@ -670,7 +704,7 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: FontSizes.sm,
-        color: Colors.textLight,
+        color: Colors.secondary,
     },
     detailValue: {
         fontSize: FontSizes.sm,
@@ -702,7 +736,7 @@ const styles = StyleSheet.create({
     },
     totalLabel: {
         fontSize: FontSizes.md,
-        color: Colors.textLight,
+        color: Colors.secondary,
     },
     totalValue: {
         fontSize: FontSizes.md,
@@ -754,7 +788,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.primary,
     },
     buttonSuccess: {
-        backgroundColor: '#10b981',
+        backgroundColor: Colors.primary,
     },
     buttonSecondary: {
         backgroundColor: Colors.surface,
@@ -775,5 +809,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: Colors.primary,
     },
+
 });
 export default RecibirPedido;

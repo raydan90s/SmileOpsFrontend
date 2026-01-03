@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,22 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Tag } from 'lucide-react-native';
+
 import ModuleHeader from '@components/shared/ModuleHeader';
 import SearchInput from '@components/shared/SearchInput';
 import DataTable from '@components/shared/DataTable';
 import Paginacion from '@components/shared/Paginacion';
 import LoadingSpinner from '@components/shared/LoadingSpinner';
-import { getAllMarcas, eliminarMarca } from '@services/Marcas/marcas.service';
+
+import {
+  getAllMarcas,
+  eliminarMarca,
+  activarMarca,
+} from '@services/Marcas/marcas.service';
 import type { Marca } from '@models/Marca/marcas.type';
+
 import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
 import BackButton from '@components/shared/BackButton';
 
@@ -29,9 +36,11 @@ export default function MarcasPage() {
 
   const itemsPorPagina = 10;
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      cargarDatos();
+    }, [])
+  );
 
   const cargarDatos = async () => {
     try {
@@ -55,7 +64,9 @@ export default function MarcasPage() {
   };
 
   const handleEditar = (marca: Marca) => {
-    router.push(`/administracion/parametros-generales/marcas/editar/${marca.iid_marca}`);
+    router.push(
+      `/administracion/parametros-generales/marcas/editar/${marca.iid_marca}`
+    );
   };
 
   const handleEliminar = async (marca: Marca) => {
@@ -81,13 +92,42 @@ export default function MarcasPage() {
     );
   };
 
+  const handleActivar = async (marca: Marca) => {
+    Alert.alert(
+      'Confirmar activación',
+      '¿Está seguro de activar esta marca?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Activar',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await activarMarca(marca.iid_marca);
+              Alert.alert('Éxito', 'Marca activada exitosamente');
+              cargarDatos();
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo activar la marca');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const marcasFiltradas = marcas.filter((m) =>
     m.vnombre_marca.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPaginas = Math.ceil(marcasFiltradas.length / itemsPorPagina);
   const indiceInicio = (paginaActual - 1) * itemsPorPagina;
-  const indiceFin = Math.min(indiceInicio + itemsPorPagina, marcasFiltradas.length);
+  const indiceFin = Math.min(
+    indiceInicio + itemsPorPagina,
+    marcasFiltradas.length
+  );
   const marcasPaginadas = marcasFiltradas.slice(indiceInicio, indiceFin);
 
   const handleCambiarPagina = (nuevaPagina: number) => {
@@ -167,8 +207,16 @@ export default function MarcasPage() {
             data={marcasPaginadas}
             onEdit={handleEditar}
             onDelete={handleEliminar}
+            onActivate={handleActivar}
             getItemId={(marca) => marca.iid_marca}
             emptyMessage="No se encontraron marcas"
+            getTitleField={(marca) => marca.vnombre_marca}
+            getBadge={(marca) => ({
+              text: marca.bactivo ? 'Activo' : 'Inactivo',
+              color: marca.bactivo ? '#065F46' : '#991B1B',
+              backgroundColor: marca.bactivo ? '#D1FAE5' : '#FEE2E2',
+            })}
+            getIsActive={(marca) => marca.bactivo}
           />
 
           {marcasFiltradas.length > 0 && (

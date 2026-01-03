@@ -1,23 +1,23 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { PacienteForm } from '@models/Busqueda/PacienteForm.types';
 import type { BusquedaPacienteState, IconoTipoInfo } from '@models/Busqueda/BusquedaPaciente.types';
-import { 
-  buscarPacientePorCodigo, 
-  buscarPacientePorCedula, 
-  buscarPacientePorNombre 
+import {
+  buscarPacientePorCodigo,
+  buscarPacientePorCedula,
+  buscarPacientePorNombre
 } from '@services/Pacientes/Pacientes.service';
-import { 
-  detectarTipoBusqueda, 
-  validarTerminoBusqueda, 
-  obtenerMensajeError 
+import {
+  detectarTipoBusqueda,
+  validarTerminoBusqueda,
+  obtenerMensajeError
 } from '@utils/validacionBusqueda';
 
 interface UseBusquedaPacienteProps {
   onPacienteSeleccionado?: (paciente: PacienteForm) => void;
 }
 
-export const useBusquedaPaciente = ({ 
-  onPacienteSeleccionado 
+export const useBusquedaPaciente = ({
+  onPacienteSeleccionado
 }: UseBusquedaPacienteProps) => {
   const [state, setState] = useState<BusquedaPacienteState>({
     terminoBusqueda: '',
@@ -41,9 +41,9 @@ export const useBusquedaPaciente = ({
     const valorLimpio = state.terminoBusqueda.trim();
     const validacion = validarTerminoBusqueda(valorLimpio);
     if (!validacion.valido) {
-      setState(prev => ({ 
-        ...prev, 
-        error: validacion.error || '' 
+      setState(prev => ({
+        ...prev,
+        error: validacion.error || ''
       }));
       return;
     }
@@ -86,12 +86,12 @@ export const useBusquedaPaciente = ({
           pacienteEncontrado: resultado,
           buscando: false,
           error: '',
-          tipoBusqueda: tipo
+          tipoBusqueda: tipo,
+          terminoBusqueda: '', // ← LIMPIAR AQUÍ
         }));
 
-        if (Array.isArray(resultado)) {
-          onPacienteSeleccionado?.(resultado[0]);
-        } else {
+        // ✅ SOLO llamar si es un paciente único (no array)
+        if (!Array.isArray(resultado)) {
           onPacienteSeleccionado?.(resultado);
         }
       } else {
@@ -115,6 +115,7 @@ export const useBusquedaPaciente = ({
     try {
       let pacienteCompleto: PacienteForm | null = null;
 
+      // Si viene de una lista, buscar el paciente completo
       if (Array.isArray(state.pacienteEncontrado)) {
         pacienteCompleto = await buscarPacientePorCodigo(paciente.codigo);
       } else {
@@ -124,12 +125,19 @@ export const useBusquedaPaciente = ({
       if (pacienteCompleto) {
         setState(prev => ({
           ...prev,
-          pacienteEncontrado: pacienteCompleto
+          pacienteEncontrado: pacienteCompleto,
+          terminoBusqueda: '', // ← LIMPIAR TAMBIÉN AQUÍ
         }));
+
+        // ✅ Llamar al callback con el paciente completo
         onPacienteSeleccionado?.(pacienteCompleto);
       }
     } catch (err) {
       console.error('Error al cargar paciente completo:', err);
+      setState(prev => ({
+        ...prev,
+        error: 'Error al cargar los datos completos del paciente'
+      }));
     }
   };
 
@@ -143,26 +151,26 @@ export const useBusquedaPaciente = ({
         return {
           icon: null,
           texto: 'Código',
-          color: '#3b82f6' 
+          color: '#3b82f6'
         };
       case 'cedula':
         return {
           icon: null,
           texto: 'Cédula',
-          color: '#6366f1' 
+          color: '#6366f1'
         };
       case 'nombre':
         return {
           icon: null,
           texto: 'Nombre',
-          color: '#a855f7' 
+          color: '#a855f7'
         };
       default:
         return null;
     }
   };
 
-  const resetearBusqueda = () => {
+  const resetearBusqueda = useCallback(() => {
     setState({
       terminoBusqueda: '',
       pacienteEncontrado: null,
@@ -170,7 +178,7 @@ export const useBusquedaPaciente = ({
       error: '',
       tipoBusqueda: ''
     });
-  };
+  }, []); 
 
   return {
     state,
