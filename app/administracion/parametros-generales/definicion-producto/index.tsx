@@ -1,132 +1,194 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   Alert,
-  ActivityIndicator,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  Pressable,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Layers, ChevronDown, Check } from 'lucide-react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { FileText } from 'lucide-react-native';
 
 import ModuleHeader from '@components/shared/ModuleHeader';
+import SearchInput from '@components/shared/SearchInput';
+import DataTable from '@components/shared/DataTable';
+import Paginacion from '@components/shared/Paginacion';
 import LoadingSpinner from '@components/shared/LoadingSpinner';
-
-import { getClasificacionesActivas } from '@services/ClasificacionProducto/clasificacion.service';
-import { getSubclasificacionesByClasificacion } from '@services/SubclasificacionProducto/subclasificacion.service';
-
-import type { Clasificacion } from '@models/ClasificacionProducto/Clasificacion.types';
-import type { Subclasificacion } from '@models/SubclasificacionProducto/Subclasificacion.types';
-
-import Theme from '@constants/theme';
 import BackButton from '@components/shared/BackButton';
+
+import {
+  getAllProductos,
+  eliminarProducto,
+  activarProducto,
+} from '@services/ProductoInventario/ProductoInventario.service';
+
+import type { ProductoInventario } from '@models/ProductoInventario/ProductoInventario.types';
+import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
 
 export default function DefinicionProductoPage() {
   const router = useRouter();
 
-  const [clasificaciones, setClasificaciones] = useState<Clasificacion[]>([]);
-  const [subclasificaciones, setSubclasificaciones] = useState<Subclasificacion[]>([]);
-  const [selectedClasificacion, setSelectedClasificacion] = useState<number | ''>('');
-  const [selectedSubclasificacion, setSelectedSubclasificacion] = useState<number | ''>('');
+  const [productos, setProductos] = useState<ProductoInventario[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingSubclasificaciones, setLoadingSubclasificaciones] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
 
-  const [showClasificacionModal, setShowClasificacionModal] = useState(false);
-  const [showSubclasificacionModal, setShowSubclasificacionModal] = useState(false);
+  const itemsPorPagina = 10;
 
-  useEffect(() => {
-    cargarClasificaciones();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      cargarDatos();
+    }, [])
+  );
 
-  const cargarClasificaciones = async () => {
+  const cargarDatos = async () => {
     try {
       setLoading(true);
-      const data = await getClasificacionesActivas();
-      setClasificaciones(
-        data.sort((a, b) => a.iid_clasificacion - b.iid_clasificacion)
-      );
+      const data = await getAllProductos();
+      setProductos(data);
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron cargar las clasificaciones');
+      Alert.alert('Error', 'No se pudieron cargar los productos');
     } finally {
       setLoading(false);
     }
   };
 
-  const cargarSubclasificaciones = async (idClasificacion: number) => {
-    try {
-      setLoadingSubclasificaciones(true);
-      const data = await getSubclasificacionesByClasificacion(idClasificacion);
-      setSubclasificaciones(data);
-    } catch (error) {
-      Alert.alert('Error', 'No se pudieron cargar las subclasificaciones');
-      setSubclasificaciones([]);
-    } finally {
-      setLoadingSubclasificaciones(false);
-    }
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPaginaActual(1);
   };
 
-  const handleClasificacionChange = (value: number | '') => {
-    setSelectedClasificacion(value);
-    setSelectedSubclasificacion('');
-    setSubclasificaciones([]);
-    setShowClasificacionModal(false);
-
-    if (value !== '') {
-      cargarSubclasificaciones(value);
-    }
+  const handleNuevo = () => {
+    router.push('/administracion/parametros-generales/definicion-producto/crear');
   };
 
-  const handleSubclasificacionChange = (value: number | '') => {
-    setSelectedSubclasificacion(value);
-    setShowSubclasificacionModal(false);
-  };
-
-  const handleAgregarDefinicion = () => {
-    if (!selectedClasificacion || !selectedSubclasificacion) {
-      Alert.alert(
-        'Información incompleta',
-        'Por favor seleccione una clasificación y subclasificación primero'
-      );
-      return;
-    }
-
-    const clasificacionSeleccionada = clasificaciones.find(
-      (c) => c.iid_clasificacion === selectedClasificacion
+  const handleEditar = (producto: ProductoInventario) => {
+    router.push(
+      `/administracion/parametros-generales/definicion-producto/editar/${producto.iid_inventario}`
     );
-
-    const subclasificacionSeleccionada = subclasificaciones.find(
-      (s) => s.iid_subclasificacion === selectedSubclasificacion
-    );
-
-    router.push({
-      pathname: '/administracion/parametros-generales/definicion-producto/crear',
-      params: {
-        clasificacionId: selectedClasificacion.toString(),
-        clasificacionDesc: clasificacionSeleccionada?.v_descripcion || '',
-        subclasificacionId: selectedSubclasificacion.toString(),
-        subclasificacionCodigo: subclasificacionSeleccionada?.v_codigo || '',
-        subclasificacionDesc: subclasificacionSeleccionada?.v_descripcion || '',
-      },
-    });
   };
 
-  const clasificacionSeleccionada = clasificaciones.find(
-    (c) => c.iid_clasificacion === selectedClasificacion
-  );
+  const handleEliminar = async (producto: ProductoInventario) => {
+    Alert.alert(
+      'Confirmar eliminación',
+      '¿Está seguro de eliminar este producto?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await eliminarProducto(producto.iid_inventario);
+              Alert.alert('Éxito', 'Producto eliminado exitosamente');
+              cargarDatos();
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo eliminar el producto');
+            }
+          },
+        },
+      ]
+    );
+  };
 
-  const subclasificacionSeleccionada = subclasificaciones.find(
-    (s) => s.iid_subclasificacion === selectedSubclasificacion
+  const handleActivar = async (producto: ProductoInventario) => {
+    Alert.alert(
+      'Confirmar activación',
+      '¿Está seguro de activar este producto?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Activar',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await activarProducto(producto.iid_inventario);
+              Alert.alert('Éxito', 'Producto activado exitosamente');
+              cargarDatos();
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo activar el producto');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const productosFiltrados = productos.filter((p) => {
+    const searchLower = searchTerm.toLowerCase();
+    const nombreMatch = p.vnombre_producto?.toLowerCase().includes(searchLower) || false;
+    const codigoMatch = p.codigo_producto?.toLowerCase().includes(searchLower) || false;
+    const marcaMatch = p.vnombre_marca?.toLowerCase().includes(searchLower) || false;
+    return nombreMatch || codigoMatch || marcaMatch;
+  });
+
+  const totalPaginas = Math.ceil(productosFiltrados.length / itemsPorPagina);
+  const indiceInicio = (paginaActual - 1) * itemsPorPagina;
+  const indiceFin = Math.min(
+    indiceInicio + itemsPorPagina,
+    productosFiltrados.length
   );
+  const productosPaginados = productosFiltrados.slice(indiceInicio, indiceFin);
+
+  const handleCambiarPagina = (nuevaPagina: number) => {
+    setPaginaActual(nuevaPagina);
+  };
+
+  const getNombreCompleto = (item: ProductoInventario) => {
+    return [
+      item.vnombre_producto,
+      item.vnombre_caracteristica,
+      item.vnombre_marca
+    ].filter(Boolean).join(' - ');
+  };
 
   if (loading) {
-    return <LoadingSpinner message="Cargando datos..." />;
+    return <LoadingSpinner message="Cargando productos..." />;
   }
+
+  const columns = [
+    {
+      key: 'vnombre_producto',
+      label: 'Producto / Detalle',
+      width: 3,
+      render: (item: ProductoInventario) => (
+        <View style={styles.cellContainer}>
+          <Text style={styles.nombreText}>
+            {getNombreCompleto(item)}
+          </Text>
+          <Text style={styles.codigoText}>
+            {item.codigo_producto}
+          </Text>
+        </View>
+      ),
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      width: 1,
+      render: (item: ProductoInventario) => (
+        <View
+          style={[
+            styles.badge,
+            item.estado ? styles.badgeActive : styles.badgeInactive,
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeText,
+              item.estado ? styles.badgeTextActive : styles.badgeTextInactive,
+            ]}
+          >
+            {item.estado ? 'Activo' : 'Inactivo'}
+          </Text>
+        </View>
+      ),
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -139,200 +201,57 @@ export default function DefinicionProductoPage() {
         showsVerticalScrollIndicator={false}
       >
         <ModuleHeader
-          icon={Layers}
-          title="Consulta Clasificaciones de Productos"
+          icon={FileText}
           addButtonText="Nuevo"
-          subtitle="Consulte y gestione las clasificaciones de productos"
-          onAddClick={handleAgregarDefinicion}
+          title="Definición de Productos"
+          subtitle="Administre el inventario de productos"
+          onAddClick={handleNuevo}
         />
 
         <View style={styles.content}>
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Clasificación</Text>
-              <TouchableOpacity
-                style={styles.selectButton}
-                onPress={() => setShowClasificacionModal(true)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.selectButtonText,
-                    !clasificacionSeleccionada && styles.selectButtonPlaceholder,
-                  ]}
-                >
-                  {clasificacionSeleccionada
-                    ? `${clasificacionSeleccionada.iid_clasificacion
-                      .toString()
-                      .padStart(2, '0')} - ${clasificacionSeleccionada.v_descripcion}`
-                    : 'Seleccione una clasificación'}
-                </Text>
-                <ChevronDown size={20} color={Theme.colors.placeholder} />
-              </TouchableOpacity>
-            </View>
+          <SearchInput
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Buscar por nombre, código o marca..."
+          />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Sub Clasificación</Text>
-              <TouchableOpacity
-                style={[
-                  styles.selectButton,
-                  (!selectedClasificacion || loadingSubclasificaciones) &&
-                  styles.selectButtonDisabled,
-                ]}
-                onPress={() =>
-                  selectedClasificacion &&
-                  !loadingSubclasificaciones &&
-                  setShowSubclasificacionModal(true)
-                }
-                disabled={!selectedClasificacion || loadingSubclasificaciones}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.selectButtonText,
-                    !subclasificacionSeleccionada && styles.selectButtonPlaceholder,
-                  ]}
-                >
-                  {loadingSubclasificaciones
-                    ? 'Cargando...'
-                    : subclasificacionSeleccionada
-                      ? `${subclasificacionSeleccionada.v_codigo} - ${subclasificacionSeleccionada.v_descripcion}`
-                      : selectedClasificacion
-                        ? 'Seleccione una subclasificación'
-                        : 'Primero seleccione una clasificación'}
-                </Text>
-                <ChevronDown size={20} color={Theme.colors.placeholder} />
-              </TouchableOpacity>
+          <DataTable
+            title="LISTA DE PRODUCTOS"
+            columns={columns}
+            data={productosPaginados}
+            onEdit={handleEditar}
+            onDelete={handleEliminar}
+            onActivate={handleActivar}
+            getItemId={(item) => item.iid_inventario}
+            emptyMessage="No se encontraron productos"
+            
+            getTitleField={(item) => {
+              const linea1 = getNombreCompleto(item);
+              const linea2 = item.codigo_producto || '';
+              return `${linea1}\n${linea2}`;
+            }}
+            
+            getBadge={(item) => ({
+              text: item.estado ? 'Activo' : 'Inactivo',
+              color: item.estado ? '#065F46' : '#991B1B',
+              backgroundColor: item.estado ? '#D1FAE5' : '#FEE2E2',
+            })}
+            getIsActive={(item) => item.estado}
+          />
 
-              {loadingSubclasificaciones && (
-                <ActivityIndicator
-                  size="small"
-                  color={Theme.colors.primary}
-                  style={styles.loader}
-                />
-              )}
-            </View>
-
-            {selectedClasificacion &&
-              subclasificaciones.length === 0 &&
-              !loadingSubclasificaciones && (
-                <View style={styles.warningBox}>
-                  <Text style={styles.warningText}>
-                    No hay subclasificaciones disponibles para esta clasificación.
-                  </Text>
-                </View>
-              )}
-          </View>
+          {productosFiltrados.length > 0 && (
+            <Paginacion
+              paginaActual={paginaActual}
+              totalPaginas={totalPaginas}
+              indiceInicio={indiceInicio}
+              indiceFin={indiceFin}
+              totalItems={productosFiltrados.length}
+              onCambiarPagina={handleCambiarPagina}
+              nombreEntidad="productos"
+            />
+          )}
         </View>
       </ScrollView>
-
-      <Modal
-        visible={showClasificacionModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowClasificacionModal(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowClasificacionModal(false)}
-        >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Seleccionar Clasificación</Text>
-              </View>
-
-              <FlatList
-                data={clasificaciones}
-                keyExtractor={(item) => item.iid_clasificacion.toString()}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.modalItem}
-                    onPress={() => handleClasificacionChange(item.iid_clasificacion)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.modalItemText}>
-                      {item.iid_clasificacion.toString().padStart(2, '0')} -{' '}
-                      {item.v_descripcion}
-                    </Text>
-                    {selectedClasificacion === item.iid_clasificacion && (
-                      <Check size={20} color={Theme.colors.primary} />
-                    )}
-                  </TouchableOpacity>
-                )}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                style={styles.modalList} 
-              />
-
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={() => setShowClasificacionModal(false)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalCloseButtonText}>Cerrar</Text>
-              </TouchableOpacity>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      <Modal
-        visible={showSubclasificacionModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowSubclasificacionModal(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowSubclasificacionModal(false)}
-        >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Seleccionar Subclasificación</Text>
-              </View>
-
-              <FlatList
-                data={subclasificaciones}
-                keyExtractor={(item) => item.iid_subclasificacion.toString()}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.modalItem}
-                    onPress={() =>
-                      handleSubclasificacionChange(item.iid_subclasificacion)
-                    }
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.modalItemText}>
-                      {item.v_codigo} - {item.v_descripcion}
-                    </Text>
-                    {selectedSubclasificacion === item.iid_subclasificacion && (
-                      <Check size={20} color={Theme.colors.primary} />
-                    )}
-                  </TouchableOpacity>
-                )}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                ListEmptyComponent={
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>
-                      No hay subclasificaciones disponibles
-                    </Text>
-                  </View>
-                }
-                style={styles.modalList}
-              />
-
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={() => setShowSubclasificacionModal(false)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalCloseButtonText}>Cerrar</Text>
-              </TouchableOpacity>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -340,149 +259,55 @@ export default function DefinicionProductoPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Theme.spacing.xxl,
+    paddingBottom: Spacing.xxl,
   },
   content: {
-    padding: Theme.spacing.md,
-  },
-  card: {
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.lg,
-    gap: Theme.spacing.lg,
-  },
-  inputGroup: {
-    gap: Theme.spacing.xs,
-  },
-  label: {
-    fontSize: Theme.fontSizes.sm,
-    fontWeight: Theme.fontWeights.semibold,
-    color: Theme.colors.text,
-  },
-  selectButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Theme.colors.surface,
-    borderWidth: 2,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.borderRadius.md,
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-  },
-  selectButtonDisabled: {
-    backgroundColor: Theme.colors.backgroundLight,
-    opacity: Theme.opacity.disabled,
-  },
-  selectButtonText: {
-    fontSize: Theme.fontSizes.md,
-    color: Theme.colors.text,
-    flex: 1,
-  },
-  selectButtonPlaceholder: {
-    color: Theme.colors.placeholder,
-  },
-  loader: {
-    marginTop: Theme.spacing.xs,
+    padding: Spacing.md,
   },
   header: {
-    padding: Theme.spacing.md,
+    padding: Spacing.md,
   },
-  infoBox: {
-    marginTop: Theme.spacing.sm,
-    padding: Theme.spacing.md,
-    backgroundColor: Theme.colors.backgroundLight,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    gap: Theme.spacing.xs,
-  },
-  infoText: {
-    fontSize: Theme.fontSizes.sm,
-    color: Theme.colors.text,
-  },
-  infoBold: {
-    fontWeight: Theme.fontWeights.semibold,
-  },
-  warningBox: {
-    padding: Theme.spacing.md,
-    backgroundColor: '#FEF3C7',
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: '#FCD34D',
-  },
-  warningText: {
-    fontSize: Theme.fontSizes.sm,
-    color: '#92400E',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  cellContainer: {
+    flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.md,
   },
-  modalContent: {
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.borderRadius.lg,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '70%',
-    overflow: 'hidden',
-    ...Theme.shadows.xl,
+  nombreText: {
+    fontSize: FontSizes.sm,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 2,
   },
-  modalHeader: {
-    padding: Theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
+  codigoText: {
+    fontSize: FontSizes.xs,
+    color: Colors.textLight,
+    fontFamily: 'monospace',
   },
-  modalTitle: {
-    fontSize: Theme.fontSizes.lg,
-    fontWeight: Theme.fontWeights.bold,
-    color: Theme.colors.text,
+  badge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+    alignSelf: 'flex-start',
   },
-  modalList: {
-    maxHeight: 400, 
+  badgeActive: {
+    backgroundColor: '#D1FAE5',
   },
-  modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Theme.spacing.md,
+  badgeInactive: {
+    backgroundColor: '#FEE2E2',
   },
-  modalItemText: {
-    fontSize: Theme.fontSizes.md,
-    color: Theme.colors.text,
-    flex: 1,
+  badgeText: {
+    fontSize: FontSizes.xs,
+    fontWeight: '600',
   },
-  separator: {
-    height: 1,
-    backgroundColor: Theme.colors.border,
+  badgeTextActive: {
+    color: '#065F46',
   },
-  emptyContainer: {
-    padding: Theme.spacing.xl,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: Theme.fontSizes.sm,
-    color: Theme.colors.placeholder,
-  },
-  modalCloseButton: {
-    backgroundColor: Theme.colors.primary,
-    padding: Theme.spacing.md,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.border,
-  },
-  modalCloseButtonText: {
-    color: Theme.colors.textInverse,
-    fontSize: Theme.fontSizes.md,
-    fontWeight: Theme.fontWeights.semibold,
+  badgeTextInactive: {
+    color: '#991B1B',
   },
 });

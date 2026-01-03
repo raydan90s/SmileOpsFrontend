@@ -7,9 +7,12 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Switch
+  Switch,
+  Platform,
+  Modal,
 } from 'react-native';
-import { FileText, Upload, X } from 'lucide-react-native';
+import { FileText, Upload, X, Calendar } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@constants/theme';
 import type { DatosFactura } from '@models/FacturaPedido/FacturaPedido.types';
@@ -44,6 +47,12 @@ const SeccionFacturaPedido: React.FC<SeccionFacturaPedidoProps> = ({
 }) => {
   const [erroresArchivos, setErroresArchivos] = useState<{ xml?: string; pdf?: string }>({});
   const [mostrarSelectorEntidad, setMostrarSelectorEntidad] = useState(false);
+  const [mostrarDatePicker, setMostrarDatePicker] = useState<{
+    tipo: 'factura' | 'autorizacion' | null;
+    visible: boolean;
+  }>({ tipo: null, visible: false });
+
+  const [fechaTemporal, setFechaTemporal] = useState<Date | null>(null);
 
   const handleCheckboxChange = (checked: boolean) => {
     onTieneFacturaChange(checked);
@@ -71,6 +80,91 @@ const SeccionFacturaPedido: React.FC<SeccionFacturaPedidoProps> = ({
 
   const handleInputChange = (field: keyof DatosFactura, newValue: any) => {
     onChange({ ...value, [field]: newValue });
+  };
+
+  const handleFechaChange = (event: any, selectedDate?: Date) => {
+    if (selectedDate) {
+      setFechaTemporal(selectedDate);
+    }
+  };
+
+  const confirmarFecha = () => {
+    const tipo = mostrarDatePicker.tipo;
+    const fecha = fechaTemporal || obtenerFechaInicial(mostrarDatePicker.tipo || 'factura');
+
+    if (tipo === 'factura') {
+      const fechaStr = fecha.toISOString().split('T')[0];
+      handleInputChange('d_fecha_factura', fechaStr);
+    } else if (tipo === 'autorizacion') {
+      const year = fecha.getFullYear();
+      const month = String(fecha.getMonth() + 1).padStart(2, '0');
+      const day = String(fecha.getDate()).padStart(2, '0');
+      const hours = String(fecha.getHours()).padStart(2, '0');
+      const minutes = String(fecha.getMinutes()).padStart(2, '0');
+      const fechaStr = `${year}-${month}-${day} ${hours}:${minutes}`;
+      handleInputChange('d_fecha_autorizacion', fechaStr);
+    }
+
+    setMostrarDatePicker({ tipo: null, visible: false });
+    setFechaTemporal(null);
+  };
+
+  const cancelarSeleccion = () => {
+    setMostrarDatePicker({ tipo: null, visible: false });
+    setFechaTemporal(null);
+  };
+
+  const obtenerFechaMinima = (): Date => {
+    const hoy = new Date();
+    const hace30Dias = new Date(hoy);
+    hace30Dias.setDate(hoy.getDate() - 30);
+    return hace30Dias;
+  };
+
+  const formatearFechaDisplay = (fecha: string): string => {
+    if (!fecha) return '';
+    try {
+      const date = new Date(fecha);
+      if (isNaN(date.getTime())) return fecha;
+      
+      return date.toLocaleDateString('es-EC', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch {
+      return fecha;
+    }
+  };
+
+  const formatearFechaHoraDisplay = (fecha: string): string => {
+    if (!fecha) return '';
+    try {
+      const date = new Date(fecha);
+      if (isNaN(date.getTime())) return fecha;
+      
+      return date.toLocaleDateString('es-EC', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return fecha;
+    }
+  };
+
+  const obtenerFechaInicial = (tipo: 'factura' | 'autorizacion'): Date => {
+    if (tipo === 'factura' && value.d_fecha_factura) {
+      const fecha = new Date(value.d_fecha_factura);
+      if (!isNaN(fecha.getTime())) return fecha;
+    }
+    if (tipo === 'autorizacion' && value.d_fecha_autorizacion) {
+      const fecha = new Date(value.d_fecha_autorizacion);
+      if (!isNaN(fecha.getTime())) return fecha;
+    }
+    return new Date();
   };
 
   const handleArchivoChange = async (tipo: 'xml' | 'pdf') => {
@@ -106,10 +200,10 @@ const SeccionFacturaPedido: React.FC<SeccionFacturaPedidoProps> = ({
 
       onChange({
         ...value,
-        [`archivo_${tipo}`]: file as any 
+        [`archivo_${tipo}`]: file as any
       });
       setErroresArchivos(prev => ({ ...prev, [tipo]: undefined }));
-      
+
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'No se pudo cargar el archivo');
@@ -214,13 +308,15 @@ const SeccionFacturaPedido: React.FC<SeccionFacturaPedidoProps> = ({
               <Text style={styles.label}>
                 Fecha <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={styles.input}
-                value={value.d_fecha_factura}
-                onChangeText={(text) => handleInputChange('d_fecha_factura', text)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={Colors.placeholder}
-              />
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setMostrarDatePicker({ tipo: 'factura', visible: true })}
+              >
+                <Calendar size={16} color={Colors.placeholder} />
+                <Text style={value.d_fecha_factura ? styles.dateText : styles.datePlaceholder}>
+                  {value.d_fecha_factura ? formatearFechaDisplay(value.d_fecha_factura) : 'Seleccionar fecha'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -263,13 +359,17 @@ const SeccionFacturaPedido: React.FC<SeccionFacturaPedidoProps> = ({
             </View>
             <View style={styles.halfField}>
               <Text style={styles.label}>Fecha Aut.</Text>
-              <TextInput
-                style={styles.input}
-                value={value.d_fecha_autorizacion}
-                onChangeText={(text) => handleInputChange('d_fecha_autorizacion', text)}
-                placeholder="YYYY-MM-DD HH:mm"
-                placeholderTextColor={Colors.placeholder}
-              />
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setMostrarDatePicker({ tipo: 'autorizacion', visible: true })}
+              >
+                <Calendar size={16} color={Colors.placeholder} />
+                <Text style={value.d_fecha_autorizacion ? styles.dateText : styles.datePlaceholder}>
+                  {value.d_fecha_autorizacion 
+                    ? formatearFechaHoraDisplay(value.d_fecha_autorizacion) 
+                    : 'Seleccionar fecha y hora'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -341,7 +441,7 @@ const SeccionFacturaPedido: React.FC<SeccionFacturaPedidoProps> = ({
                     {value.archivo_xml ? (value.archivo_xml as any).name : 'Seleccionar XML'}
                   </Text>
                 </TouchableOpacity>
-                
+
                 {value.archivo_xml && (
                   <TouchableOpacity
                     style={styles.removeButton}
@@ -383,6 +483,70 @@ const SeccionFacturaPedido: React.FC<SeccionFacturaPedidoProps> = ({
               )}
             </View>
           </View>
+
+          {mostrarDatePicker.visible && mostrarDatePicker.tipo && (
+            <Modal
+              visible={mostrarDatePicker.visible}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={cancelarSeleccion}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={cancelarSeleccion}
+              >
+                <TouchableOpacity
+                  style={styles.modalContent}
+                  activeOpacity={1}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>
+                      {mostrarDatePicker.tipo === 'factura' 
+                        ? 'Seleccionar Fecha de Factura' 
+                        : 'Seleccionar Fecha de Autorización'}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={cancelarSeleccion}
+                      style={styles.modalCloseButton}
+                    >
+                      <X size={24} color={Colors.text} />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={styles.datePickerContainer}>
+                    <DateTimePicker
+                      value={fechaTemporal || obtenerFechaInicial(mostrarDatePicker.tipo)}
+                      mode={mostrarDatePicker.tipo === 'autorizacion' ? 'datetime' : 'date'}
+                      display="spinner"
+                      onChange={handleFechaChange}
+                      minimumDate={obtenerFechaMinima()}
+                      maximumDate={new Date()}
+                      locale="es-EC"
+                      themeVariant="light"
+                      textColor={Colors.text}
+                    />
+                  </View>
+
+                  <View style={styles.modalFooter}>
+                    <TouchableOpacity
+                      style={styles.modalConfirmButton}
+                      onPress={confirmarFecha}
+                    >
+                      <Text style={styles.modalConfirmButtonText}>Confirmar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalCancelButton}
+                      onPress={cancelarSeleccion}
+                    >
+                      <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </Modal>
+          )}
         </View>
       )}
     </View>
@@ -622,6 +786,85 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     backgroundColor: '#FEF2F2',
     borderRadius: BorderRadius.md
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    backgroundColor: '#fff',
+    gap: Spacing.xs,
+  },
+  dateText: {
+    fontSize: FontSizes.sm,
+    color: Colors.text,
+    flex: 1,
+  },
+  datePlaceholder: {
+    fontSize: FontSizes.sm,
+    color: Colors.placeholder,
+    flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Spacing.xl,
+    ...Shadows.lg
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: 'bold',
+    color: Colors.text,
+  },
+  modalCloseButton: {
+    padding: Spacing.xs,
+  },
+  datePickerContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: Spacing.md,
+  },
+  modalFooter: {
+    padding: Spacing.lg,
+    paddingTop: Spacing.md,
+    gap: Spacing.sm,
+  },
+  modalConfirmButton: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  modalConfirmButtonText: {
+    fontSize: FontSizes.md,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  modalCancelButton: {
+    backgroundColor: '#F3F4F6',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  modalCancelButtonText: {
+    fontSize: FontSizes.md,
+    fontWeight: '600',
+    color: Colors.text,
   },
 });
 

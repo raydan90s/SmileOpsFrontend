@@ -151,3 +151,35 @@ export async function eliminarProductoNombre(id: number): Promise<ProductoNombre
     throw err;
   }
 }
+
+export async function activarProductoNombre(id: number): Promise<ProductoNombre> {
+  try {
+    const res = await fetch(`${ENDPOINT}/${id}/activar`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Nombre de producto no encontrado');
+      }
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al activar nombre de producto: ${res.status}`
+      );
+    }
+
+    const responseData = await res.json();
+    
+    if (responseData.success && responseData.data) {
+      return responseData.data;
+    }
+    
+    throw new Error('Respuesta inválida del servidor');
+  } catch (err) {
+    console.error('Error activarProductoNombre:', err);
+    throw err;
+  }
+}

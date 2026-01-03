@@ -194,3 +194,35 @@ export async function eliminarMarca(id: number): Promise<Marca> {
     throw err;
   }
 }
+
+export async function activarMarca(id: number): Promise<Marca> {
+  try {
+    const res = await fetch(`${API_URL}/marcas/${id}/activar`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Marca no encontrada');
+      }
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al activar marca: ${res.status}`
+      );
+    }
+
+    const data: ApiResponse<Marca> = await res.json();
+    
+    if (data.success && data.data) {
+      return data.data;
+    }
+    
+    throw new Error('Respuesta inválida del servidor');
+  } catch (err) {
+    console.error('Error activarMarca:', err);
+    throw err;
+  }
+}

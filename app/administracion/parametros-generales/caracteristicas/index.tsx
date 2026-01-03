@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Zap } from 'lucide-react-native';
 
 import ModuleHeader from '@components/shared/ModuleHeader';
@@ -19,6 +19,7 @@ import LoadingSpinner from '@components/shared/LoadingSpinner';
 import {
   getAllCaracteristicas,
   eliminarCaracteristica,
+  activarCaracteristica,
 } from '@services/Caracteristicas/caracteristicas.service';
 import type { Caracteristica } from '@models/Caracteristicas/caracteristicas.types';
 
@@ -35,9 +36,11 @@ export default function CaracteristicasPage() {
 
   const itemsPorPagina = 10;
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      cargarDatos();
+    }, [])
+  );
 
   const cargarDatos = async () => {
     try {
@@ -82,6 +85,32 @@ export default function CaracteristicasPage() {
               cargarDatos();
             } catch (error) {
               Alert.alert('Error', 'No se pudo eliminar la característica');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleActivar = async (caracteristica: Caracteristica) => {
+    Alert.alert(
+      'Confirmar activación',
+      '¿Está seguro de activar esta característica?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Activar',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await activarCaracteristica(caracteristica.iid_caracteristica);
+              Alert.alert('Éxito', 'Característica activada exitosamente');
+              cargarDatos();
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo activar la característica');
+            } finally {
+              setLoading(false);
             }
           },
         },
@@ -185,8 +214,16 @@ export default function CaracteristicasPage() {
             data={caracteristicasPaginadas}
             onEdit={handleEditar}
             onDelete={handleEliminar}
+            onActivate={handleActivar}
             getItemId={(caracteristica) => caracteristica.iid_caracteristica}
             emptyMessage="No se encontraron características"
+            getTitleField={(caracteristica) => caracteristica.vnombre_caracteristica}
+            getBadge={(caracteristica) => ({
+              text: caracteristica.bactivo ? 'Activo' : 'Inactivo',
+              color: caracteristica.bactivo ? '#065F46' : '#991B1B',
+              backgroundColor: caracteristica.bactivo ? '#D1FAE5' : '#FEE2E2',
+            })}
+            getIsActive={(caracteristica) => caracteristica.bactivo}
           />
 
           {caracteristicasFiltradas.length > 0 && (

@@ -16,6 +16,7 @@ interface UsePedidosActionsParams {
     abrirModalAprobacion: (pedido: Pedido) => void;
     abrirModalRechazo: (pedido: Pedido) => void;
     abrirModalDetalle: (pedido: Pedido) => void;
+    estadoActivo?: number;
 }
 
 export const usePedidosActions = ({
@@ -26,9 +27,10 @@ export const usePedidosActions = ({
     cargarPedidos,
     abrirModalAprobacion,
     abrirModalRechazo,
-    abrirModalDetalle
+    abrirModalDetalle,
+    estadoActivo
 }: UsePedidosActionsParams) => {
-    
+
     const router = useRouter();
     const { usuario } = useAuth();
 
@@ -59,7 +61,7 @@ export const usePedidosActions = ({
             alertaSinPermisos('editar pedidos');
             return;
         }
-        router.push(`/inventario/pedidos/cotizar/${pedido.iid_pedido}`);
+        router.push(`/administracion/estado-pedidos/editar/${pedido.iid_pedido}`);
     };
 
     const handleAprobar = (pedido: Pedido) => {
@@ -184,10 +186,10 @@ export const usePedidosActions = ({
     return {
         permisos: {
             puedeVer,
-            puedeEditar,
-            puedeAprobar,
-            puedeRechazar,
-            puedeMarcarRecibido
+            puedeEditar: puedeEditar && (estadoActivo === 1 || estadoActivo === 6),
+            puedeAprobar: puedeAprobar && (estadoActivo === 1 || estadoActivo === 6),
+            puedeRechazar: puedeRechazar && (estadoActivo === 1 || estadoActivo === 6),
+            puedeMarcarRecibido: puedeMarcarRecibido && estadoActivo === 3
         },
         handleVerDetalle,
         handleEditar,

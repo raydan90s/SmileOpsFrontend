@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react'; 
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router'; 
 import { Package } from 'lucide-react-native';
 import ModuleHeader from '@components/shared/ModuleHeader';
 import SearchInput from '@components/shared/SearchInput';
@@ -17,6 +17,7 @@ import LoadingSpinner from '@components/shared/LoadingSpinner';
 import {
   getAllProductosNombre,
   eliminarProductoNombre,
+  activarProductoNombre,
 } from '@services/ProductoNombre/ProductoNombre.service';
 import type { ProductoNombre } from '@models/ProductoNombre/ProductoNombre.types';
 import { Colors, Spacing, FontSizes, BorderRadius } from '@constants/theme';
@@ -32,13 +33,15 @@ export default function ProductosPage() {
 
   const itemsPorPagina = 10;
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      cargarDatos();
+    }, [])
+  );
 
   const cargarDatos = async () => {
     try {
-      setLoading(true);
+      setLoading(true); 
       const data = await getAllProductosNombre();
       setProductosNombre(data);
     } catch (error) {
@@ -79,6 +82,29 @@ export default function ProductosPage() {
               cargarDatos();
             } catch (error) {
               Alert.alert('Error', 'No se pudo eliminar el nombre de producto');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleActivar = async (producto: ProductoNombre) => {
+    Alert.alert(
+      'Confirmar activación',
+      '¿Está seguro de activar este nombre de producto?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Activar',
+          style: 'default',
+          onPress: async () => {
+            try {
+              await activarProductoNombre(producto.iid_nombre);
+              Alert.alert('Éxito', 'Nombre de producto activado exitosamente');
+              cargarDatos();
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo activar el nombre de producto');
             }
           },
         },
@@ -175,8 +201,16 @@ export default function ProductosPage() {
             data={productosPaginados}
             onEdit={handleEditar}
             onDelete={handleEliminar}
+            onActivate={handleActivar}
             getItemId={(producto) => producto.iid_nombre}
             emptyMessage="No se encontraron nombres de productos"
+            getTitleField={(producto) => producto.vnombre_producto}
+            getBadge={(producto) => ({
+              text: producto.bactivo ? 'Activo' : 'Inactivo',
+              color: producto.bactivo ? '#065F46' : '#991B1B',
+              backgroundColor: producto.bactivo ? '#D1FAE5' : '#FEE2E2',
+            })}
+            getIsActive={(producto) => producto.bactivo}
           />
 
           {productosFiltrados.length > 0 && (

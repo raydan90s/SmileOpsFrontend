@@ -4,12 +4,27 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export async function crearCita(cita: NuevaCita) {
   try {
+    // Transformar los nombres de las propiedades a lowercase para el backend
+    const citaAPI = {
+      iidpaciente: cita.iIdPaciente,
+      iiddoctor: cita.iIdDoctor,
+      iidconsultorio: cita.iIdConsultorio,
+      iidespecialidad: cita.iIdEspecialidad,
+      dfechacita: cita.dFechaCita,
+      choracita: cita.cHoraCita,
+      itiempo: cita.iTiempo,
+      cestado: cita.cEstado,
+      vusuarioing: cita.vUsuarioIng,
+    };
+
+    console.log('📤 Enviando al backend:', citaAPI); // ← Para debug
+
     const res = await fetch(`${API_URL}/citas`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(cita),
+      body: JSON.stringify(citaAPI), // ← Enviar citaAPI en lugar de cita
     });
 
     if (!res.ok) {

@@ -194,3 +194,35 @@ export async function eliminarCaracteristica(id: number): Promise<Caracteristica
     throw err;
   }
 }
+
+export async function activarCaracteristica(id: number): Promise<Caracteristica> {
+  try {
+    const res = await fetch(`${API_URL}/caracteristicas/${id}/activar`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Característica no encontrada');
+      }
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al activar característica: ${res.status}`
+      );
+    }
+
+    const data: ApiResponse<Caracteristica> = await res.json();
+    
+    if (data.success && data.data) {
+      return data.data;
+    }
+    
+    throw new Error('Respuesta inválida del servidor');
+  } catch (err) {
+    console.error('Error activarCaracteristica:', err);
+    throw err;
+  }
+}

@@ -101,7 +101,7 @@ const CitasPage = () => {
 
     const generarHoras = () => {
         const horas = [];
-        for (let h = 7; h <= 20; h++) {
+        for (let h = 9; h <= 20; h++) {
             for (let m = 0; m < 60; m += 15) {
                 const hora = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
                 horas.push(hora);
@@ -256,7 +256,7 @@ const CitasPage = () => {
 
     const agendarCita = async () => {
         try {
-            if (!formData.codigo || !formData.cedula || !formData.nombre) {
+            if (!formData.codigo || !formData.nombre) {
                 setMensajeError('Por favor complete todos los datos del paciente');
                 setMostrarModalError(true);
                 return;
@@ -411,6 +411,60 @@ const CitasPage = () => {
         setFiltroDoctor('');
         setFiltroConsultorio('');
     };
+
+    const horasDisponiblesFiltradas = useMemo(() => {
+        if (!diaSeleccionado || !formData.consultorio || !doctorSeleccionado) {
+            return HORAS_DISPONIBLES;
+        }
+
+        const hoy = new Date();
+        const fechaSeleccionada = new Date(mesActual.getFullYear(), mesActual.getMonth(), diaSeleccionado);
+
+        if (fechaSeleccionada < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) {
+            return [];
+        }
+
+        const citasDelDia = citasFiltradas.filter(cita =>
+            cita.dia === diaSeleccionado &&
+            cita.mes === mesActual.getMonth() &&
+            cita.año === mesActual.getFullYear() &&
+            cita.doctor === doctores.find(d => d.iiddoctor.toString() === doctorSeleccionado)?.nombreCompleto &&
+            cita.consultorio === consultorios.find(c => c.iidconsultorio.toString() === formData.consultorio)?.vnombre &&
+            cita.estado !== 'cancelada'
+        );
+
+        const hayChoque = (hora: string) => {
+            const [h, m] = hora.split(':').map(Number);
+            const minutosInicio = h * 60 + m;
+            const tiempoEstimado = TIEMPO_MAP[formData.tiempoEstimado] || 15;
+            const minutosFin = minutosInicio + tiempoEstimado;
+
+            return citasDelDia.some(cita => {
+                const [citaH, citaM] = cita.horaCita.split(':').map(Number);
+                const citaInicio = citaH * 60 + citaM;
+                const citaTiempo = TIEMPO_MAP[cita.tiempoEstimado] || 15;
+                const citaFin = citaInicio + citaTiempo;
+
+                return (minutosInicio < citaFin && minutosFin > citaInicio);
+            });
+        };
+
+        let horasFiltradas = HORAS_DISPONIBLES;
+
+        if (fechaSeleccionada.toDateString() === hoy.toDateString()) {
+            const horaActual = hoy.getHours();
+            const minutoActual = hoy.getMinutes();
+
+            horasFiltradas = horasFiltradas.filter(hora => {
+                const [h, m] = hora.split(':').map(Number);
+                return h > horaActual || (h === horaActual && m > minutoActual);
+            });
+        }
+
+        horasFiltradas = horasFiltradas.filter(hora => !hayChoque(hora));
+
+        return horasFiltradas;
+    }, [diaSeleccionado, mesActual, formData.consultorio, formData.tiempoEstimado, doctorSeleccionado, citasFiltradas, doctores, consultorios]);
 
     if (loadingDoctores || loadingConsultorios || cargandoCitas) {
         return (
@@ -693,7 +747,7 @@ const CitasPage = () => {
                                                             <Text style={styles.modalTitle}>Seleccionar Hora</Text>
                                                         </View>
                                                         <FlatList
-                                                            data={HORAS_DISPONIBLES}
+                                                            data={horasDisponiblesFiltradas}
                                                             keyExtractor={(item) => item}
                                                             renderItem={({ item }) => (
                                                                 <TouchableOpacity
@@ -713,6 +767,17 @@ const CitasPage = () => {
                                                             ItemSeparatorComponent={() => <View style={styles.separator} />}
                                                             style={styles.modalList}
                                                         />
+                                                        {horasDisponiblesFiltradas.length === 0 && (
+                                                            <View style={{ padding: 20, alignItems: 'center' }}>
+                                                                <Text style={{ color: Theme.colors.textLight, textAlign: 'center' }}>
+                                                                    {!diaSeleccionado
+                                                                        ? 'Seleccione un día primero'
+                                                                        : !doctorSeleccionado || !formData.consultorio
+                                                                            ? 'Seleccione doctor y consultorio primero'
+                                                                            : 'No hay horas disponibles para este día'}
+                                                                </Text>
+                                                            </View>
+                                                        )}
                                                         <TouchableOpacity
                                                             style={styles.modalCloseButton}
                                                             onPress={() => setShowHoraModal(false)}
