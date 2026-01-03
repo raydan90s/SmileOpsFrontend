@@ -102,7 +102,6 @@ export default function FormularioDefinicionProducto() {
       setMarcas(marcasData);
       setUnidades(unidadesData);
     } catch (error) {
-      console.error('Error al cargar datos:', error);
       Alert.alert('Error', 'No se pudieron cargar los datos del formulario');
     } finally {
       setLoading(false);
@@ -120,7 +119,6 @@ export default function FormularioDefinicionProducto() {
         codigo: nuevoCodigo,
       }));
     } catch (error) {
-      console.error('Error al generar código:', error);
       Alert.alert('Error', 'No se pudo generar el código del producto');
     } finally {
       setLoadingCodigo(false);
@@ -203,7 +201,6 @@ export default function FormularioDefinicionProducto() {
         mensaje: 'Producto creado exitosamente',
       });
     } catch (error: any) {
-      console.error('Error al guardar producto:', error);
       Alert.alert('Error', error.message || 'No se pudo guardar el producto');
     } finally {
       setSaving(false);

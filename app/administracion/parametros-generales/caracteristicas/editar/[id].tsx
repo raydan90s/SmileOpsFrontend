@@ -53,7 +53,6 @@ export default function EditarCaracteristica() {
         bactivo: data.bactivo,
       });
     } catch (error) {
-      console.error('Error al cargar característica:', error);
       Alert.alert('Error', 'No se pudo cargar la característica');
       router.back();
     } finally {
@@ -72,7 +71,6 @@ export default function EditarCaracteristica() {
       await actualizarCaracteristica(Number(id), formData);
       setModalVisible(true);
     } catch (error: any) {
-      console.error('Error al guardar:', error);
       Alert.alert('Error', error.message || 'Error al actualizar la característica');
     } finally {
       setSaving(false);

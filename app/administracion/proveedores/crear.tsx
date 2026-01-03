@@ -29,8 +29,10 @@ interface FormData {
   vtelefono: string;
   vemail: string;
   itipo_proveedor: number | '';
+  iid_pais: number; 
   bactivo: boolean;
 }
+
 export default function CrearProveedor() {
   const router = useRouter();
 
@@ -47,6 +49,7 @@ export default function CrearProveedor() {
     vtelefono: '',
     vemail: '',
     itipo_proveedor: '',
+    iid_pais: 1,
     bactivo: true,
   });
 
@@ -61,7 +64,6 @@ export default function CrearProveedor() {
       const tipos = await fetchAllTiposProveedor();
       setTiposProveedor(tipos);
     } catch (error) {
-      console.error('Error al cargar datos iniciales:', error);
       Alert.alert('Error', 'No se pudieron cargar los datos iniciales');
     }
   };
@@ -118,7 +120,6 @@ export default function CrearProveedor() {
 
       setDatosConsultados(true);
     } catch (error) {
-      console.error('Error al consultar SRI:', error);
       setErrors({ ruc: 'Error al consultar el SRI. Verifique el RUC e intente nuevamente.' });
     } finally {
       setConsultandoSRI(false);
@@ -176,14 +177,15 @@ export default function CrearProveedor() {
         vtelefono: formData.vtelefono.trim() || undefined,
         vemail: formData.vemail.trim() || undefined,
         itipo_proveedor: formData.itipo_proveedor as number,
+        iid_pais: formData.iid_pais,
         bactivo: formData.bactivo,
       };
 
       await createProveedor(proveedorData);
       setModalVisible(true);
     } catch (error) {
-      console.error('Error al guardar proveedor:', error);
-      Alert.alert('Error', 'No se pudo crear el proveedor');
+      const message = error instanceof Error ? error.message : 'No se pudo crear el proveedor';
+      Alert.alert('Error', message);
     } finally {
       setLoading(false);
     }

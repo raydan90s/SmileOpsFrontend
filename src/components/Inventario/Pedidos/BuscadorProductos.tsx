@@ -5,7 +5,7 @@ import {
     Text,
     TouchableOpacity,
     StyleSheet,
-    FlatList,
+    ScrollView,
     ActivityIndicator,
     Keyboard,
     TouchableWithoutFeedback
@@ -36,15 +36,12 @@ const BuscadorProductos: React.FC<BuscadorProductosProps> = ({
 
     const obtenerNombreCompleto = (producto: ProductoInventario): string => {
         if (!producto) return '';
-
         const partes = [
             producto.vnombre_producto,
             producto.vnombre_caracteristica,
             producto.vnombre_marca
         ].filter(p => p && p.trim() !== '');
-
-        if (partes.length === 0) return producto.codigo_producto || 'Sin Nombre';
-        return partes.join(' - ');
+        return partes.length === 0 ? producto.codigo_producto || 'Sin Nombre' : partes.join(' - ');
     };
 
     useEffect(() => {
@@ -64,11 +61,7 @@ const BuscadorProductos: React.FC<BuscadorProductosProps> = ({
         const terminoBusqueda = busqueda.toLowerCase();
         const codigo = (producto.codigo_producto || '').toLowerCase();
         const nombreCompleto = obtenerNombreCompleto(producto).toLowerCase();
-
-        return (
-            codigo.includes(terminoBusqueda) ||
-            nombreCompleto.includes(terminoBusqueda)
-        );
+        return codigo.includes(terminoBusqueda) || nombreCompleto.includes(terminoBusqueda);
     }).slice(0, 50);
 
     const handleInputChange = (text: string) => {
@@ -92,7 +85,7 @@ const BuscadorProductos: React.FC<BuscadorProductosProps> = ({
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { zIndex: 100 }]}>
             <TextInput
                 value={productoActual ? obtenerNombreCompleto(productoActual) : busqueda}
                 onChangeText={handleInputChange}
@@ -116,13 +109,14 @@ const BuscadorProductos: React.FC<BuscadorProductosProps> = ({
                             <Text style={styles.mensajeTexto}>Cargando productos...</Text>
                         </View>
                     ) : productosFiltrados.length > 0 ? (
-                        <FlatList
-                            data={productosFiltrados}
-                            keyExtractor={(item) => item.iid_inventario.toString()}
+                        <ScrollView
+                            style={styles.lista}
                             keyboardShouldPersistTaps="handled"
                             nestedScrollEnabled={true}
-                            renderItem={({ item }) => (
+                        >
+                            {productosFiltrados.map((item) => (
                                 <TouchableOpacity
+                                    key={item.iid_inventario.toString()}
                                     onPress={() => handleSeleccionar(item)}
                                     style={styles.itemContainer}
                                 >
@@ -130,15 +124,18 @@ const BuscadorProductos: React.FC<BuscadorProductosProps> = ({
                                         {obtenerNombreCompleto(item)}
                                     </Text>
                                     <View style={styles.itemDetalles}>
-                                        <Text style={styles.itemTextoSecundario}>Código: {item.codigo_producto}</Text>
+                                        <Text style={styles.itemTextoSecundario}>
+                                            Código: {item.codigo_producto}
+                                        </Text>
                                         {item.unidad_compra_nombre && (
-                                            <Text style={styles.itemTextoSecundario}> | Unidad: {item.unidad_compra_nombre}</Text>
+                                            <Text style={styles.itemTextoSecundario}>
+                                                {' '}| Unidad: {item.unidad_compra_nombre}
+                                            </Text>
                                         )}
                                     </View>
                                 </TouchableOpacity>
-                            )}
-                            style={styles.lista}
-                        />
+                            ))}
+                        </ScrollView>
                     ) : (
                         <View style={styles.mensajeContainer}>
                             <Text style={styles.mensajeTexto}>No se encontraron productos</Text>
@@ -149,7 +146,7 @@ const BuscadorProductos: React.FC<BuscadorProductosProps> = ({
 
             {mostrarResultados && !productoActual && (
                 <TouchableWithoutFeedback onPress={cerrarResultados}>
-                    <View style={[StyleSheet.absoluteFill, { zIndex: -1 }]} />
+                    <View style={styles.backdrop} />
                 </TouchableWithoutFeedback>
             )}
         </View>
@@ -159,20 +156,20 @@ const BuscadorProductos: React.FC<BuscadorProductosProps> = ({
 const styles = StyleSheet.create({
     container: {
         position: 'relative',
-        zIndex: 10,
+        marginBottom: Spacing.md,
     },
     input: {
         borderWidth: 1,
         borderColor: Colors.border || '#E5E7EB',
         borderRadius: BorderRadius.md,
         paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.sm + 4, 
+        paddingVertical: Spacing.sm + 4,
         fontSize: FontSizes.sm,
         color: Colors.text,
         backgroundColor: Colors.surface,
     },
     inputDisabled: {
-        backgroundColor: '#F3F4F6', 
+        backgroundColor: '#F3F4F6',
         color: '#9CA3AF',
     },
     resultadosContainer: {
@@ -181,14 +178,14 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         marginTop: 4,
-        backgroundColor: Colors.surface,
+        backgroundColor: Colors.surface || 'white',
         borderWidth: 1,
         borderColor: Colors.border,
         borderRadius: BorderRadius.md,
-        maxHeight: 250,
+        maxHeight: 250, 
         ...Shadows.md,
-        zIndex: 1000, 
-        elevation: 5, 
+        zIndex: 1000,
+        elevation: 5,
     },
     lista: {
         maxHeight: 250,
@@ -227,6 +224,14 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.sm,
         color: '#6B7280',
     },
+    backdrop: {
+        position: 'absolute',
+        top: -1000, 
+        left: -1000,
+        right: -1000,
+        bottom: -1000,
+        zIndex: 900,
+    }
 });
 
 export default BuscadorProductos;

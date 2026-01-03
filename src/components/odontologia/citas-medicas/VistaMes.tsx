@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
   },
   diaCell: {
     flex: 1,
-    minHeight: 112,
-    padding: Theme.spacing.md,
+    minHeight: 100,
+    padding: Theme.spacing.xs,
     borderRightWidth: 1,
     borderBottomWidth: 1,
     borderColor: Theme.colors.border,
@@ -227,16 +227,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   diaNumeroContainer: {
-    marginBottom: Theme.spacing.sm,
-  },
-  diaNumeroHoyContainer: {
-    backgroundColor: Theme.colors.primary,
-    width: 32,
-    height: 32,
-    borderRadius: Theme.borderRadius.full,
-    justifyContent: 'center',
+    marginBottom: Theme.spacing.xs,
     alignItems: 'center',
   },
+ diaNumeroHoyContainer: {
+  backgroundColor: Theme.colors.primary,
+  width: 24,  
+  height: 24,  
+  borderRadius: Theme.borderRadius.full,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
   diaNumeroSelectedContainer: {
   },
   diaNumero: {

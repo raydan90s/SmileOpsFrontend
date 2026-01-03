@@ -50,7 +50,6 @@ export default function EditarMarca() {
         bactivo: data.bactivo,
       });
     } catch (error) {
-      console.error('Error al cargar marca:', error);
       Alert.alert('Error', 'No se pudo cargar la marca');
       router.back();
     } finally {
@@ -69,7 +68,6 @@ export default function EditarMarca() {
       await actualizarMarca(Number(id), formData);
       setModalVisible(true);
     } catch (error: any) {
-      console.error('Error al guardar:', error);
       Alert.alert('Error', error.message || 'Error al actualizar la marca');
     } finally {
       setSaving(false);

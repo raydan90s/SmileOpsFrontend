@@ -159,7 +159,6 @@ const RecibirPedido: React.FC = () => {
                     );
                     setProductos(productosConDetalles);
                 } catch (err) {
-                    console.error('Error cargando pedido:', err);
                     Alert.alert('Error', 'Error al cargar el pedido');
                 } finally {
                     setLoading(false);
@@ -191,7 +190,6 @@ const RecibirPedido: React.FC = () => {
                 }
 
             } catch (err) {
-                console.error('Error cargando datos:', err);
                 Alert.alert('Error', 'Error al cargar datos');
             } finally {
                 if (!modoEdicion) {
@@ -208,7 +206,6 @@ const RecibirPedido: React.FC = () => {
                 const entidades = await fetchAllEntidades();
                 setEntidadesFacturadoras(entidades);
             } catch (error) {
-                console.error('Error cargando entidades:', error);
             }
         };
         cargarEntidades();
@@ -267,7 +264,6 @@ const RecibirPedido: React.FC = () => {
             );
 
         } catch (error: any) {
-            console.error('❌ Error al recibir pedido:', error);
             Alert.alert('Error', error.message || 'Error al recibir el pedido');
         } finally {
             setGuardando(false);
@@ -336,7 +332,6 @@ const RecibirPedido: React.FC = () => {
             );
 
         } catch (error: any) {
-            console.error('Error en el proceso:', error);
             Alert.alert('Error', error.message || 'Error al procesar el pedido');
         } finally {
             setGuardando(false);

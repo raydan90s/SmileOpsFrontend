@@ -52,7 +52,6 @@ export default function DefinicionProductoPage() {
         data.sort((a, b) => a.iid_clasificacion - b.iid_clasificacion)
       );
     } catch (error) {
-      console.error('Error al cargar clasificaciones:', error);
       Alert.alert('Error', 'No se pudieron cargar las clasificaciones');
     } finally {
       setLoading(false);
@@ -65,7 +64,6 @@ export default function DefinicionProductoPage() {
       const data = await getSubclasificacionesByClasificacion(idClasificacion);
       setSubclasificaciones(data);
     } catch (error) {
-      console.error('Error al cargar subclasificaciones:', error);
       Alert.alert('Error', 'No se pudieron cargar las subclasificaciones');
       setSubclasificaciones([]);
     } finally {

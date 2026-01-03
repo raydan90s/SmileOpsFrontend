@@ -57,7 +57,6 @@ export default function EditarProducto() {
         bactivo: data.bactivo,
       });
     } catch (error) {
-      console.error('Error al cargar producto:', error);
       Alert.alert('Error', 'No se pudo cargar el nombre de producto');
       router.back();
     } finally {
@@ -80,7 +79,6 @@ export default function EditarProducto() {
         mensaje: 'El nombre de producto ha sido actualizado correctamente.',
       });
     } catch (error: any) {
-      console.error('Error al guardar:', error);
       Alert.alert(
         'Error',
         error.message || 'Error al actualizar el nombre de producto'

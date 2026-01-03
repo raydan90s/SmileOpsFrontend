@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: Spacing.sm,
-    color: Colors.textLight,
+    color: Colors.secondary,
     fontSize: FontSizes.sm,
   },
   listContainer: {
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   },
   productCode: {
     fontSize: FontSizes.xs,
-    color: Colors.textLight,
+    color: Colors.secondary,
   },
   deleteButton: {
     padding: Spacing.xs,
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FontSizes.xs,
-    color: Colors.textLight,
+    color: Colors.secondary,
     fontWeight: '500',
     marginBottom: 2,
   },

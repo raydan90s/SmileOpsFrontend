@@ -77,7 +77,7 @@ export default function LoginPage() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Usuario</Text>
             <View style={styles.inputWrapper}>
-              <Mail size={20} color={Colors.textLight} style={styles.icon} />
+              <Mail size={20} color={Colors.secondary} style={styles.icon} />
               <TextInput
                 style={styles.input}
                 value={usuarioInput}
@@ -93,7 +93,7 @@ export default function LoginPage() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Contraseña</Text>
             <View style={styles.inputWrapper}>
-              <Lock size={20} color={Colors.textLight} style={styles.icon} />
+              <Lock size={20} color={Colors.secondary} style={styles.icon} />
               <TextInput
                 style={styles.input}
                 value={password}
@@ -107,21 +107,6 @@ export default function LoginPage() {
           </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <View style={styles.optionsRow}>
-            <TouchableOpacity
-              style={styles.checkboxContainer}
-              onPress={() => setRememberMe(!rememberMe)}
-            >
-              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.checkboxLabel}>Recordarme</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-            </TouchableOpacity>
-          </View>
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -144,12 +129,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: Spacing.md },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
-  loadingText: { marginTop: Spacing.md, fontSize: FontSizes.lg, color: Colors.textLight },
+  loadingText: { marginTop: Spacing.md, fontSize: FontSizes.lg, color: Colors.secondary },
   formContainer: { backgroundColor: Colors.surface, borderRadius: BorderRadius.lg, padding: Spacing.xxl, ...Shadows.md },
   header: { alignItems: 'center', marginBottom: Spacing.xl },
   logo: { height: 100, width: 200, marginBottom: Spacing.md },
   title: { fontSize: FontSizes.xxl, fontWeight: 'bold', color: Colors.text, marginBottom: Spacing.sm },
-  subtitle: { fontSize: FontSizes.md, color: Colors.textLight, textAlign: 'center' },
+  subtitle: { fontSize: FontSizes.md, color: Colors.secondary, textAlign: 'center' },
   inputGroup: { marginBottom: Spacing.lg },
   label: { fontSize: FontSizes.sm, fontWeight: '600', color: Colors.text, marginBottom: Spacing.sm },
   inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: Colors.border, borderRadius: BorderRadius.md, paddingHorizontal: Spacing.md, backgroundColor: Colors.surface },

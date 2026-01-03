@@ -118,7 +118,6 @@ export default function EditarDefinicionProducto() {
         cantMinimaStock: producto.cantidad_minima?.toString() || '0',
       });
     } catch (error) {
-      console.error('Error al cargar datos:', error);
       Alert.alert('Error', 'No se pudo cargar el producto');
       router.back();
     } finally {
@@ -177,7 +176,6 @@ export default function EditarDefinicionProducto() {
         mensaje: 'El producto ha sido actualizado correctamente',
       });
     } catch (error: any) {
-      console.error('Error al actualizar producto:', error);
       Alert.alert('Error', error.message || 'No se pudo actualizar el producto');
     } finally {
       setSaving(false);

@@ -20,8 +20,8 @@ class CloudinaryService {
     private defaultUploadPreset: string;
 
     constructor() {
-        this.cloudName = process.env.VITE_API_CLAUDINARY_NAME || '';
-        this.defaultUploadPreset = process.env.VITE_API_CLAUDINARY_PRESET || '';
+        this.cloudName = process.env.EXPO_PUBLIC_API_CLAUDINARY_NAME || '';
+        this.defaultUploadPreset = process.env.EXPO_PUBLIC_API_CLAUDINARY_PRESET || '';
     }
 
     private validateFile(file: File, maxSize?: number): { valid: boolean; error?: string } {

@@ -10,7 +10,7 @@ import ProveedoresFiltros from '@components/administracion/Proveedores/Proveedor
 import ProveedoresList from '@components/administracion/Proveedores/ProveedoresTabla';
 import Paginacion from '@components/shared/Paginacion';
 
-import { fetchAllProveedores, deleteProveedor } from '@services/Administracion/proveedores.service';
+import { fetchAllProveedores, deleteProveedor, activateProveedor } from '@services/Administracion/proveedores.service';
 import { fetchAllTiposProveedor } from '@services/Administracion/tiposProveedor.service';
 import type { TipoProveedor } from '@models/administracion/Proveedores/TipoProveedor.types';
 import type { Proveedor } from '@models/administracion/Proveedores/Proveedor.types';
@@ -44,7 +44,6 @@ export default function ProveedoresPage() {
       setTiposProveedor(tiposData);
       setPaginaActual(1);
     } catch (error) {
-      console.error('Error al cargar datos:', error);
       Alert.alert('Error', 'No se pudieron cargar los proveedores');
     } finally {
       setLoading(false);
@@ -66,13 +65,30 @@ export default function ProveedoresPage() {
               Alert.alert('Éxito', 'Proveedor eliminado exitosamente');
               cargarDatos();
             } catch (error) {
-              console.error('Error al eliminar:', error);
               Alert.alert('Error', 'No se pudo eliminar el proveedor');
             }
           }
         }
       ]
     );
+  };
+
+  const handleActivar = async (id: number) => {
+    Alert.alert('Confirmar activación', '¿Desea activar este proveedor?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Activar',
+        onPress: async () => {
+          try {
+            await activateProveedor(id);
+            Alert.alert('Éxito', 'Proveedor activado exitosamente');
+            cargarDatos();
+          } catch (error) {
+            Alert.alert('Error', 'No se pudo activar el proveedor');
+          }
+        }
+      }
+    ]);
   };
 
   const getTipoNombre = (idTipo: number) => {
@@ -128,6 +144,7 @@ export default function ProveedoresPage() {
             proveedores={proveedoresPaginados}
             onEditar={(id) => router.push(`/administracion/proveedores/editar/${id}`)}
             onEliminar={handleEliminar}
+            onActivar={handleActivar}
             getTipoNombre={getTipoNombre}
           />
         </View>

@@ -147,12 +147,10 @@ export default function FormularioPaciente({ onCancel, pacienteId }: FormularioP
       let imageUrl = existingImageUrl;
 
       if (selectedImage) {
-        console.log('Subiendo imagen a Cloudinary...');
         const response = await cloudinaryService.uploadImage(selectedImage, {
           folder: 'clientes'
         });
         imageUrl = response.secure_url;
-        console.log('Imagen subida exitosamente:', imageUrl);
       }
 
       const pacienteDB: PacienteDB = {

@@ -54,7 +54,6 @@ const PacientesScreen: React.FC = () => {
       const pacientesData = await obtenerTodosPacientes();
       setPacientes(pacientesData);
     } catch (error) {
-      console.error('Error al cargar datos:', error);
       Alert.alert('Error', 'No se pudieron cargar los pacientes');
     } finally {
       setLoading(false);
@@ -93,7 +92,6 @@ const PacientesScreen: React.FC = () => {
               }
               cargarDatos(); 
             } catch (error) {
-              console.error(`Error al ${accion} paciente:`, error);
               Alert.alert('Error', `Ocurrió un error al ${accion} el paciente.`);
             }
           }
