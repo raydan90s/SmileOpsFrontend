@@ -51,7 +51,6 @@ export default function CrearCaracteristica() {
         mensaje: 'La característica ha sido creada exitosamente.',
       });
     } catch (error: any) {
-      console.error('Error al guardar:', error);
       Alert.alert('Error', error.message || 'Error al guardar la característica');
       setLoading(false);
     }

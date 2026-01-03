@@ -85,7 +85,6 @@ export async function createProveedor(proveedor: CreateProveedorDTO): Promise<Pr
     
     throw new Error(data.message || "Respuesta inválida del servidor");
   } catch (err) {
-    console.error("Error createProveedor:", err);
     throw err;
   }
 }
@@ -121,7 +120,6 @@ export async function updateProveedor(
     
     throw new Error(data.message || "Respuesta inválida del servidor");
   } catch (err) {
-    console.error("Error updateProveedor:", err);
     throw err;
   }
 }
@@ -147,7 +145,34 @@ export async function deleteProveedor(id: number): Promise<{ success: boolean; m
     
     throw new Error(data.message || "Respuesta inválida del servidor");
   } catch (err) {
-    console.error("Error deleteProveedor:", err);
+    throw err;
+  }
+}
+
+export async function activateProveedor(id: number): Promise<Proveedor> {
+  try {
+    const res = await fetch(`${API_URL}/proveedores/${id}/activar`, { 
+      method: "PATCH"
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Proveedor no encontrado');
+      }
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al activar proveedor: ${res.status}`
+      );
+    }
+
+    const data = await res.json();
+    
+    if (data.success) {
+      return data.data;
+    }
+    
+    throw new Error(data.message || "Respuesta inválida del servidor");
+  } catch (err) {
     throw err;
   }
 }
@@ -170,7 +195,6 @@ export async function getDireccionesByProveedor(id_proveedor: number): Promise<D
     
     throw new Error(data.message || "Respuesta inválida del servidor");
   } catch (err) {
-    console.error("Error getDireccionesByProveedor:", err);
     throw err;
   }
 }
@@ -200,7 +224,6 @@ export async function createDireccion(direccion: CreateDireccionDTO): Promise<Di
     
     throw new Error(data.message || "Respuesta inválida del servidor");
   } catch (err) {
-    console.error("Error createDireccion:", err);
     throw err;
   }
 }
@@ -236,7 +259,6 @@ export async function updateDireccion(
     
     throw new Error(data.message || "Respuesta inválida del servidor");
   } catch (err) {
-    console.error("Error updateDireccion:", err);
     throw err;
   }
 }
@@ -262,7 +284,6 @@ export async function deleteDireccion(id: number): Promise<{ success: boolean; m
     
     throw new Error(data.message || "Respuesta inválida del servidor");
   } catch (err) {
-    console.error("Error deleteDireccion:", err);
     throw err;
   }
 }

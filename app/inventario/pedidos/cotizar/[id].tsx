@@ -100,7 +100,6 @@ const CotizarOrdenPedidoPage: React.FC = () => {
 
           setProductos(productosConDetalles);
         } catch (err) {
-          console.error('Error cargando pedido:', err);
           setMensajeError('Error al cargar el pedido');
           setModalErrorAbierto(true);
         } finally {
@@ -134,7 +133,6 @@ const CotizarOrdenPedidoPage: React.FC = () => {
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar datos');
-        console.error('Error cargando datos:', err);
       } finally {
         if (!modoEdicion) {
           setLoading(false);
@@ -257,7 +255,6 @@ const CotizarOrdenPedidoPage: React.FC = () => {
       }
 
     } catch (error: any) {
-      console.error('❌ Error al guardar pedido:', error);
       setMensajeError(error.message || 'Error al guardar el pedido');
       setModalErrorAbierto(true);
     } finally {

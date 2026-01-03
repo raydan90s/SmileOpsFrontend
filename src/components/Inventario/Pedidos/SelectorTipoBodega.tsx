@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Pressable } from 'react-native';
+import { ChevronDown, Check } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, FontSizes } from '@constants/theme';
 
 interface OpcionGeneral {
@@ -58,6 +59,9 @@ const SelectorTipoBodega = <T extends OpcionGeneral, B extends OpcionGeneral>({
   showBodega = true,
 }: SelectorTipoBodegaProps<T, B>) => {
   
+  const [showTipoModal, setShowTipoModal] = useState(false);
+  const [showBodegaModal, setShowBodegaModal] = useState(false);
+  
   const getTipoDescripcion = () => {
     const selected = tipoOptions.find(opt => String(opt[tipoIdKey]) === tipoValue);
     return selected ? String(selected[tipoDescKey]) : '';
@@ -78,38 +82,93 @@ const SelectorTipoBodega = <T extends OpcionGeneral, B extends OpcionGeneral>({
   );
 
   const renderSelectField = (
-    label: string, 
-    value: string, 
+    label: string,
+    value: string,
     placeholder: string,
     options: any[],
     idKey: any,
     descKey: any,
-    onChange: (val: string) => void
+    onChange: (val: string) => void,
+    showModal: boolean,
+    setShowModal: (show: boolean) => void
   ) => {
     const selectedOption = options.find(opt => String(opt[idKey]) === value);
     const displayText = selectedOption ? String(selectedOption[descKey]) : placeholder;
 
     return (
-      <View style={styles.fieldContainer}>
-        <Text style={styles.label}>
-          {label} <Text style={styles.required}>*</Text>
-        </Text>
-        
-        <TouchableOpacity 
-          style={[
-            styles.inputContainer, 
-            (disabled || loading) && styles.disabledContainer
-          ]}
-          disabled={disabled || loading}
+      <>
+        <View style={styles.fieldContainer}>
+          <Text style={styles.label}>
+            {label} <Text style={styles.required}>*</Text>
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.inputContainer,
+              (disabled || loading) && styles.disabledContainer
+            ]}
+            disabled={disabled || loading}
+            onPress={() => !disabled && !loading && setShowModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.valueText,
+              !selectedOption && { color: Colors.placeholder }
+            ]}>
+              {loading ? 'Cargando...' : displayText}
+            </Text>
+            <ChevronDown size={20} color={Colors.placeholder} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Modal */}
+        <Modal
+          visible={showModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowModal(false)}
         >
-           <Text style={[
-             styles.valueText, 
-             !selectedOption && { color: Colors.placeholder }
-           ]}>
-             {loading ? 'Cargando...' : displayText}
-           </Text>
-        </TouchableOpacity>
-      </View>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowModal(false)}>
+            <Pressable onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>{label}</Text>
+                </View>
+                <FlatList
+                  data={options}
+                  keyExtractor={(item) => String(item[idKey])}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.modalItem}
+                      onPress={() => {
+                        onChange(String(item[idKey]));
+                        setShowModal(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.modalItemText}>
+                        {String(item[descKey])}
+                      </Text>
+                      {String(item[idKey]) === value && (
+                        <Check size={20} color={Colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  ItemSeparatorComponent={() => <View style={styles.separator} />}
+                  style={styles.modalList}
+                />
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setShowModal(false)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      </>
     );
   };
 
@@ -125,7 +184,9 @@ const SelectorTipoBodega = <T extends OpcionGeneral, B extends OpcionGeneral>({
               tipoOptions, 
               tipoIdKey, 
               tipoDescKey, 
-              tipoOnChange
+              tipoOnChange,
+              showTipoModal,
+              setShowTipoModal
             )
       )}
 
@@ -139,7 +200,9 @@ const SelectorTipoBodega = <T extends OpcionGeneral, B extends OpcionGeneral>({
               bodegaOptions, 
               bodegaIdKey, 
               bodegaDescKey, 
-              bodegaOnChange
+              bodegaOnChange,
+              showBodegaModal,
+              setShowBodegaModal
             )
       )}
     </View>
@@ -167,13 +230,15 @@ const styles = StyleSheet.create({
     color: '#EF4444', 
   },
   inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md, 
     paddingVertical: Spacing.sm + 2,
     backgroundColor: Colors.surface,
-    justifyContent: 'center',
   },
   readOnlyContainer: {
     backgroundColor: '#F9FAFB', 
@@ -185,14 +250,65 @@ const styles = StyleSheet.create({
   },
   valueText: {
     fontSize: FontSizes.sm,
-    color: Colors.text, 
+    color: Colors.text,
+    flex: 1,
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.md,
+  },
+  modalContent: {
     backgroundColor: Colors.surface,
-  }
+    borderRadius: BorderRadius.lg,
+    width: '90%',
+    maxWidth: 500,
+    maxHeight: '100%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontSize: FontSizes.md,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  modalList: {
+    maxHeight: 900,
+  },
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    minHeight: 56,
+  },
+  modalItemText: {
+    fontSize: FontSizes.md,
+    color: Colors.text,
+    flex: 1,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  modalCloseButton: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  modalCloseButtonText: {
+    color: Colors.textInverse,
+    fontSize: FontSizes.sm,
+    fontWeight: '600',
+  },
 });
 
 export default SelectorTipoBodega;

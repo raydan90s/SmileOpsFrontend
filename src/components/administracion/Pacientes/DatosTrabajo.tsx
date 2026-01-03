@@ -33,41 +33,41 @@ const DatosTrabajo: React.FC<DatosTrabajoProps> = ({
   return (
     <View style={styles.container}>
       
-      <View style={styles.row}>
-        <View style={styles.halfWidth}>
-          <FormField label="Empresa" colSpan="half">
-            <TextInput
-              value={formData.empresa}
-              onChangeText={(text) => onChange('empresa', text)}
-              placeholder="Nombre empresa"
-              placeholderTextColor={Colors.textLight}
-              style={styles.input}
-            />
-          </FormField>
-        </View>
-
-        <View style={styles.halfWidth}>
-          <FormField label="Ocupación" colSpan="half">
-            <TextInput
-              value={formData.ocupacion}
-              onChangeText={(text) => onChange('ocupacion', text)}
-              placeholder="Cargo/Profesión"
-              placeholderTextColor={Colors.textLight}
-              style={styles.input}
-            />
-          </FormField>
-        </View>
+      <View style={styles.fullWidthSpacing}>
+        <FormField label="Empresa" colSpan="full">
+          <TextInput
+            value={formData.empresa}
+            onChangeText={(text) => onChange('empresa', text)}
+            placeholder="Nombre empresa"
+            placeholderTextColor={Colors.textLight}
+            style={styles.input}
+          />
+        </FormField>
       </View>
 
-      <FormField label="Dirección de Trabajo" colSpan="full">
-        <TextInput
-          value={formData.direccionTrabajo}
-          onChangeText={(text) => onChange('direccionTrabajo', text)}
-          placeholder="Dirección del lugar de trabajo"
-          placeholderTextColor={Colors.textLight}
-          style={styles.input}
-        />
-      </FormField>
+      <View style={styles.fullWidthSpacing}>
+        <FormField label="Ocupación" colSpan="full">
+          <TextInput
+            value={formData.ocupacion}
+            onChangeText={(text) => onChange('ocupacion', text)}
+            placeholder="Cargo/Profesión"
+            placeholderTextColor={Colors.textLight}
+            style={styles.input}
+          />
+        </FormField>
+      </View>
+
+      <View style={styles.fullWidthSpacing}>
+        <FormField label="Dirección de Trabajo" colSpan="full">
+          <TextInput
+            value={formData.direccionTrabajo}
+            onChangeText={(text) => onChange('direccionTrabajo', text)}
+            placeholder="Dirección del lugar de trabajo"
+            placeholderTextColor={Colors.textLight}
+            style={styles.input}
+          />
+        </FormField>
+      </View>
 
       <View style={styles.row}>
         <View style={styles.halfWidth}>
@@ -95,61 +95,57 @@ const DatosTrabajo: React.FC<DatosTrabajoProps> = ({
         </View>
       </View>
 
-      <View style={styles.row}>
-        <View style={styles.halfWidth}>
-          <SelectUbicacion
-            label="Ciudad"
-            tipo="ciudad"
-            value={formData.idCiudadTrabajo}
-            onChange={(val) => onChange('idCiudadTrabajo', val)}
-            opciones={ciudades}
-            cargando={cargandoCiudades}
-            deshabilitado={!formData.idProvinciaTrabajo}
-            mensajeDeshabilitado="Seleccione prov."
-          />
-        </View>
-
-        <View style={styles.halfWidth}>
-          <FormField label="Telf. Trabajo" colSpan="half">
-            <TextInput
-              value={formData.telefonoTrabajo}
-              onChangeText={(text) => onChange('telefonoTrabajo', text)}
-              placeholder="023456789"
-              keyboardType="phone-pad"
-              maxLength={15}
-              placeholderTextColor={Colors.textLight}
-              style={styles.input}
-            />
-          </FormField>
-        </View>
+      <View style={styles.fullWidthSpacing}>
+        <SelectUbicacion
+          label="Ciudad"
+          tipo="ciudad"
+          value={formData.idCiudadTrabajo}
+          onChange={(val) => onChange('idCiudadTrabajo', val)}
+          opciones={ciudades}
+          cargando={cargandoCiudades}
+          deshabilitado={!formData.idProvinciaTrabajo}
+          mensajeDeshabilitado="Seleccione prov."
+        />
       </View>
 
-      <View style={styles.row}>
-        <View style={styles.halfWidth}>
-          <FormField label="Email" colSpan="half">
-            <TextInput
-              value={formData.email}
-              onChangeText={(text) => onChange('email', text)}
-              placeholder="correo@ejemplo.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholderTextColor={Colors.textLight}
-              style={styles.input}
-            />
-          </FormField>
-        </View>
+      <View style={styles.fullWidthSpacing}>
+        <FormField label="Telf. Trabajo" colSpan="full">
+          <TextInput
+            value={formData.telefonoTrabajo}
+            onChangeText={(text) => onChange('telefonoTrabajo', text)}
+            placeholder="023456789"
+            keyboardType="phone-pad"
+            maxLength={15}
+            placeholderTextColor={Colors.textLight}
+            style={styles.input}
+          />
+        </FormField>
+      </View>
 
-        <View style={styles.halfWidth}>
-          <FormField label="Recomendado Por" colSpan="half">
-            <TextInput
-              value={formData.recomendadoPor}
-              onChangeText={(text) => onChange('recomendadoPor', text)}
-              placeholder="Nombre"
-              placeholderTextColor={Colors.textLight}
-              style={styles.input}
-            />
-          </FormField>
-        </View>
+      <View style={styles.fullWidthSpacing}>
+        <FormField label="Email" colSpan="full">
+          <TextInput
+            value={formData.email}
+            onChangeText={(text) => onChange('email', text)}
+            placeholder="correo@ejemplo.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholderTextColor={Colors.textLight}
+            style={styles.input}
+          />
+        </FormField>
+      </View>
+
+      <View style={styles.fullWidthSpacing}>
+        <FormField label="Recomendado Por" colSpan="full">
+          <TextInput
+            value={formData.recomendadoPor}
+            onChangeText={(text) => onChange('recomendadoPor', text)}
+            placeholder="Nombre completo"
+            placeholderTextColor={Colors.textLight}
+            style={styles.input}
+          />
+        </FormField>
       </View>
 
     </View>
@@ -167,6 +163,9 @@ const styles = StyleSheet.create({
   },
   halfWidth: {
     width: '48%',
+  },
+  fullWidthSpacing: {
+    marginBottom: Spacing.md,
   },
   input: {
     borderWidth: 1,

@@ -43,7 +43,6 @@ export default function CrearMarca() {
       await crearMarca(formData);
       setModalVisible(true);
     } catch (error: any) {
-      console.error('Error al guardar:', error);
       Alert.alert('Error', error.message || 'Error al guardar la marca');
     } finally {
       setLoading(false);

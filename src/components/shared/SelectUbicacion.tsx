@@ -54,7 +54,7 @@ const SelectUbicacion: React.FC<SelectUbicacionProps> = ({
   const keyField = getKeyField();
 
   const selectedOption = opciones.find(opcion => String(opcion[keyField]) === String(value));
-  const displayText = selectedOption ? selectedOption.vnombre : `Seleccione una ${nombres[tipo].singular}`;
+  const displayText = selectedOption ? selectedOption.vnombre : `Seleccione ${nombres[tipo].singular}`;
 
   const handleSelect = (id: string) => {
     onChange(id);

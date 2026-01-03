@@ -175,7 +175,6 @@ export const useFormularioPaciente = (paises: Pais[]) => {
             setFormData(initialData);
             setResetCounter(prev => prev + 1);
 
-            console.log('Formulario reiniciado exitosamente');
         } catch (error) {
             console.error('Error al reiniciar el formulario:', error);
             setFormData({

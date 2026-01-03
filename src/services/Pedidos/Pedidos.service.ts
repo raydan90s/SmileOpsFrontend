@@ -1,3 +1,4 @@
+import { apiRequest } from '@utils/api';
 import type {
   Pedido,
   CreatePedidoDTO,
@@ -13,36 +14,15 @@ import type {
 import type { ApiResponse } from '@models/Api.types';
 import type { CreateFacturaPedidoDTO } from '@models/FacturaPedido/FacturaPedido.types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
-  return fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-}
-
 export async function recibirPedido(
   id: number,
   recepcion: RecibirPedidoDTO
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}/recibir`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}/recibir`, {
       method: "PATCH",
       body: JSON.stringify(recepcion),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al recibir pedido: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -60,19 +40,10 @@ export async function registrarFacturaPedido(
   factura: CreateFacturaPedidoDTO
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id_pedido}/factura`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id_pedido}/factura`, {
       method: "POST",
       body: JSON.stringify(factura),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al registrar factura: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -87,21 +58,12 @@ export async function registrarFacturaPedido(
 
 export async function fetchNextPedidoId(): Promise<number> {
   try {
-    const res = await fetch(`${API_URL}/pedidos/next-id`, {
+    const data = await apiRequest<ApiResponse<{ next_id: number }>>('/pedidos/next-id', {
       method: 'GET',
     });
 
-    if (!res.ok) {
-      throw new Error(`Error al obtener siguiente ID: ${res.status}`);
-    }
-
-    const data: ApiResponse<{ next_id: number }> = await res.json();
-
-    if (data.success) {
-      if (data.data) {
-        return data.data.next_id;
-      }
-      throw new Error("Respuesta exitosa sin datos esperados.");
+    if (data.success && data.data) {
+      return data.data.next_id;
     }
 
     throw new Error(data.message || "Respuesta inválida del servidor");
@@ -113,15 +75,9 @@ export async function fetchNextPedidoId(): Promise<number> {
 
 export async function fetchTiposPedido(): Promise<TipoPedido[]> {
   try {
-    const res = await fetch(`${API_URL}/pedidos/tipos`, {
+    const data = await apiRequest<ApiResponse<TipoPedido[]>>('/pedidos/tipos', {
       method: 'GET',
     });
-
-    if (!res.ok) {
-      throw new Error(`Error al obtener tipos de pedido: ${res.status}`);
-    }
-
-    const data: ApiResponse<TipoPedido[]> = await res.json();
 
     if (data.success) {
       return data.data || [];
@@ -136,15 +92,9 @@ export async function fetchTiposPedido(): Promise<TipoPedido[]> {
 
 export async function fetchEstadosPedido(): Promise<EstadoPedido[]> {
   try {
-    const res = await fetch(`${API_URL}/pedidos/estados`, {
+    const data = await apiRequest<ApiResponse<EstadoPedido[]>>('/pedidos/estados', {
       method: 'GET',
     });
-
-    if (!res.ok) {
-      throw new Error(`Error al obtener estados de pedido: ${res.status}`);
-    }
-
-    const data: ApiResponse<EstadoPedido[]> = await res.json();
 
     if (data.success) {
       return data.data || [];
@@ -181,19 +131,11 @@ export async function fetchAllPedidos(filters?: PedidoFilters): Promise<Pedido[]
     }
 
     const queryString = params.toString();
-    const url = queryString
-      ? `${API_URL}/pedidos?${queryString}`
-      : `${API_URL}/pedidos`;
+    const endpoint = queryString ? `/pedidos?${queryString}` : '/pedidos';
 
-    const res = await fetchWithAuth(url, { 
+    const data = await apiRequest<ApiResponse<Pedido[]>>(endpoint, {
       method: 'GET',
-    }); 
-
-    if (!res.ok) {
-      throw new Error(`Error al obtener pedidos: ${res.status}`);
-    }
-
-    const data: ApiResponse<Pedido[]> = await res.json();
+    });
 
     if (data.success) {
       return data.data || [];
@@ -208,18 +150,9 @@ export async function fetchAllPedidos(filters?: PedidoFilters): Promise<Pedido[]
 
 export async function getPedidoById(id: number): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}`, {
       method: 'GET',
     });
-
-    if (!res.ok) {
-      if (res.status === 404) {
-        throw new Error('Pedido no encontrado');
-      }
-      throw new Error(`Error al obtener pedido: ${res.status}`);
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -234,19 +167,10 @@ export async function getPedidoById(id: number): Promise<Pedido> {
 
 export async function createPedido(pedido: CreatePedidoDTO): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos`, { 
+    const data = await apiRequest<ApiResponse<Pedido>>('/pedidos', {
       method: "POST",
       body: JSON.stringify(pedido),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al crear pedido: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -264,22 +188,10 @@ export async function updatePedido(
   pedido: UpdatePedidoDTO
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}`, {
       method: "PUT",
       body: JSON.stringify(pedido),
     });
-
-    if (!res.ok) {
-      if (res.status === 404) {
-        throw new Error('Pedido no encontrado');
-      }
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al actualizar pedido: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -297,19 +209,10 @@ export async function cotizarPedido(
   cotizacion: CotizarPedidoDTO
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}/cotizar`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}/cotizar`, {
       method: "PATCH",
       body: JSON.stringify(cotizacion),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al cotizar pedido: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -327,19 +230,10 @@ export async function aprobarPedido(
   aprobarData: { iid_usuario_aprueba: number; v_observaciones?: string }
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}/aprobar`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}/aprobar`, {
       method: "PATCH",
       body: JSON.stringify(aprobarData),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al aprobar pedido: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -357,19 +251,10 @@ export async function rechazarPedido(
   rechazo: RechazarPedidoDTO
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}/rechazar`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}/rechazar`, {
       method: "PATCH",
       body: JSON.stringify(rechazo),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al rechazar pedido: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -387,19 +272,10 @@ export async function aprobarCotizacionFinal(
   datos: { v_observaciones?: string }
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}/aprobar-cotizacion`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}/aprobar-cotizacion`, {
       method: "PATCH",
       body: JSON.stringify(datos),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al aprobar la cotización final: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;
@@ -417,19 +293,10 @@ export async function actualizarPedidoCotizado(
   datos: ActualizarPedidoCotizadoDTO
 ): Promise<Pedido> {
   try {
-    const res = await fetchWithAuth(`${API_URL}/pedidos/${id}/actualizar-cotizacion`, {
+    const data = await apiRequest<ApiResponse<Pedido>>(`/pedidos/${id}/actualizar-cotizacion`, {
       method: "PUT",
       body: JSON.stringify(datos),
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Error al actualizar la cotización del pedido: ${res.status}`
-      );
-    }
-
-    const data: ApiResponse<Pedido> = await res.json();
 
     if (data.success && data.data) {
       return data.data;

@@ -51,7 +51,6 @@ export default function CrearProducto() {
         mensaje: 'El nombre de producto ha sido creado exitosamente.',
       });
     } catch (error: any) {
-      console.error('Error al guardar:', error);
       Alert.alert('Error', error.message || 'Error al guardar el nombre de producto');
       setLoading(false);
     }

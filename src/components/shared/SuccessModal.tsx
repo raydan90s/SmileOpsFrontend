@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: FontSizes.md,
-    color: Colors.textLight,
+    color: Colors.primary,
     marginBottom: Spacing.xl,
     textAlign: 'center',
   },

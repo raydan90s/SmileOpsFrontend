@@ -1,7 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { Filter, X } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Pressable } from 'react-native';
+import { Filter, X, ChevronDown, Check } from 'lucide-react-native';
 import type { Consultorio } from '@models/Consultorios/Consultorios.types';
 import type { Doctor } from '@models/Doctor/Doctor.types';
 import Theme from '@constants/theme';
@@ -24,6 +23,8 @@ const FiltrosCalendario: React.FC<FiltrosCalendarioProps> = ({
   onConsultorioChange,
   onLimpiarFiltros,
 }) => {
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
+  const [showConsultorioModal, setShowConsultorioModal] = useState(false);
   const hayFiltrosActivos = doctorSeleccionado !== '' || consultorioSeleccionado !== '';
 
   return (
@@ -50,42 +51,40 @@ const FiltrosCalendario: React.FC<FiltrosCalendarioProps> = ({
       <View style={styles.filtersGrid}>
         <View style={styles.filterItem}>
           <Text style={styles.label}>Filtrar por Doctor:</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={doctorSeleccionado}
-              onValueChange={(value) => onDoctorChange(value)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Todos los Doctores" value="" />
-              {doctores.map((doctor) => (
-                <Picker.Item
-                  key={doctor.iiddoctor}
-                  label={doctor.nombreCompleto}
-                  value={doctor.iiddoctor.toString()}
-                />
-              ))}
-            </Picker>
-          </View>
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={() => setShowDoctorModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.selectButtonText,
+              !doctorSeleccionado && styles.selectButtonPlaceholder
+            ]}>
+              {doctorSeleccionado
+                ? doctores.find(d => d.iiddoctor.toString() === doctorSeleccionado)?.nombreCompleto
+                : 'Todos los Doctores'}
+            </Text>
+            <ChevronDown size={16} color={Theme.colors.placeholder} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.filterItem}>
           <Text style={styles.label}>Filtrar por Consultorio:</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={consultorioSeleccionado}
-              onValueChange={(value) => onConsultorioChange(value)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Todos los Consultorios" value="" />
-              {consultorios.map((consultorio) => (
-                <Picker.Item
-                  key={consultorio.iidconsultorio}
-                  label={consultorio.vnombre}
-                  value={consultorio.iidconsultorio.toString()}
-                />
-              ))}
-            </Picker>
-          </View>
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={() => setShowConsultorioModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.selectButtonText,
+              !consultorioSeleccionado && styles.selectButtonPlaceholder
+            ]}>
+              {consultorioSeleccionado
+                ? consultorios.find(c => c.iidconsultorio.toString() === consultorioSeleccionado)?.vnombre
+                : 'Todos los Consultorios'}
+            </Text>
+            <ChevronDown size={16} color={Theme.colors.placeholder} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -110,7 +109,81 @@ const FiltrosCalendario: React.FC<FiltrosCalendarioProps> = ({
           )}
         </View>
       )}
+
+      <Modal visible={showDoctorModal} transparent animationType="fade" onRequestClose={() => setShowDoctorModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowDoctorModal(false)}>
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Filtrar por Doctor</Text>
+              </View>
+              <FlatList
+                data={[{ iiddoctor: 0, nombreCompleto: 'Todos los Doctores' }, ...doctores]}
+                keyExtractor={(item) => item.iiddoctor.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalItem}
+                    onPress={() => {
+                      onDoctorChange(item.iiddoctor === 0 ? '' : item.iiddoctor.toString());
+                      setShowDoctorModal(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.modalItemText}>{item.nombreCompleto}</Text>
+                    {(doctorSeleccionado === item.iiddoctor.toString() || (!doctorSeleccionado && item.iiddoctor === 0)) && (
+                      <Check size={20} color={Theme.colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                style={styles.modalList}
+              />
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowDoctorModal(false)} activeOpacity={0.8}>
+                <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showConsultorioModal} transparent animationType="fade" onRequestClose={() => setShowConsultorioModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowConsultorioModal(false)}>
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Filtrar por Consultorio</Text>
+              </View>
+              <FlatList
+                data={[{ iidconsultorio: 0, vnombre: 'Todos los Consultorios' }, ...consultorios]}
+                keyExtractor={(item) => item.iidconsultorio.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalItem}
+                    onPress={() => {
+                      onConsultorioChange(item.iidconsultorio === 0 ? '' : item.iidconsultorio.toString());
+                      setShowConsultorioModal(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.modalItemText}>{item.vnombre}</Text>
+                    {(consultorioSeleccionado === item.iidconsultorio.toString() || (!consultorioSeleccionado && item.iidconsultorio === 0)) && (
+                      <Check size={20} color={Theme.colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                style={styles.modalList}
+              />
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowConsultorioModal(false)} activeOpacity={0.8}>
+                <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
+
+
   );
 };
 
@@ -201,6 +274,81 @@ const styles = StyleSheet.create({
     fontSize: Theme.fontSizes.xs,
     fontWeight: Theme.fontWeights.medium,
   },
+  selectButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  backgroundColor: Theme.colors.surface,
+  borderWidth: 1,
+  borderColor: Theme.colors.primary,
+  borderRadius: Theme.borderRadius.md,
+  paddingHorizontal: Theme.spacing.sm,
+  paddingVertical: Theme.spacing.sm - 2,
+},
+selectButtonText: {
+  fontSize: Theme.fontSizes.sm,
+  color: Theme.colors.text,
+  flex: 1,
+},
+selectButtonPlaceholder: {
+  color: Theme.colors.placeholder,
+},
+modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: Theme.spacing.md,
+},
+modalContent: {
+  backgroundColor: Theme.colors.surface,
+  borderRadius: Theme.borderRadius.lg,
+  width: '100%',
+  maxWidth: 400,
+  maxHeight: '70%',
+  overflow: 'hidden',
+  ...Theme.shadows.xl,
+},
+modalHeader: {
+  padding: Theme.spacing.md,
+  borderBottomWidth: 1,
+  borderBottomColor: Theme.colors.border,
+},
+modalTitle: {
+  fontSize: Theme.fontSizes.md,
+  fontWeight: Theme.fontWeights.bold,
+  color: Theme.colors.text,
+},
+modalList: {
+  maxHeight: 400,
+},
+modalItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: Theme.spacing.md,
+},
+modalItemText: {
+  fontSize: Theme.fontSizes.sm,
+  color: Theme.colors.text,
+  flex: 1,
+},
+separator: {
+  height: 1,
+  backgroundColor: Theme.colors.border,
+},
+modalCloseButton: {
+  backgroundColor: Theme.colors.primary,
+  padding: Theme.spacing.md,
+  alignItems: 'center',
+  borderTopWidth: 1,
+  borderTopColor: Theme.colors.border,
+},
+modalCloseButtonText: {
+  color: Theme.colors.textInverse,
+  fontSize: Theme.fontSizes.sm,
+  fontWeight: Theme.fontWeights.semibold,
+},
 });
 
 export default FiltrosCalendario;

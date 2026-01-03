@@ -7,16 +7,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ShoppingCart } from 'lucide-react-native';
-
 import { getProductoByCodigo } from '@services/InventarioProductos/inventarioProductos.service';
 import { createPedido, fetchTiposPedido, fetchNextPedidoId } from '@services/Pedidos/Pedidos.service';
 import { fetchBodegasPrincipales } from '@services/Bodegas/bodegas.service';
-
 import type { ProductoTratamiento } from '@models/Tratamiento/Tratamiento.types';
 import type { TipoPedido } from '@models/Pedidos/Pedidos.types';
 import type { Bodega } from '@models/Bodegas/Bodegas.types';
-
 import ModalExito from '@components/shared/ModalExito';
 import ModalError from '@components/shared/ModalError';
 import FormularioProducto from '@components/Inventario/Pedidos/FormularioProducto';
@@ -24,8 +22,8 @@ import TablaProductosTratamiento from '@components/Inventario/Pedidos/TablaProdu
 import FormularioEncabezadoPedido from '@components/Inventario/Pedidos/FormularioEncabezadoPedido';
 import SelectorTipoBodega from '@components/Inventario/Pedidos/SelectorTipoBodega';
 import CampoObservaciones from '@components/shared/CampoObservaciones';
-
 import { Colors, Spacing, BorderRadius, Shadows, FontSizes, FontWeights } from '@constants/theme';
+import BackButton from '@components/shared/BackButton';
 
 const SolicitarOrdenPedidoPage: React.FC = () => {
   const [productos, setProductos] = useState<ProductoTratamiento[]>([]);
@@ -63,7 +61,6 @@ const SolicitarOrdenPedidoPage: React.FC = () => {
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar datos');
-        console.error('Error cargando datos:', err);
       } finally {
         setLoading(false);
       }
@@ -150,7 +147,6 @@ const SolicitarOrdenPedidoPage: React.FC = () => {
       setNextPedidoId(nuevoId);
 
     } catch (error: any) {
-      console.error('❌ Error al guardar pedido:', error);
       setMensajeError(error.message || 'Error al guardar el pedido');
       setModalErrorAbierto(true);
     } finally {
@@ -180,8 +176,12 @@ const SolicitarOrdenPedidoPage: React.FC = () => {
   const isFormValid = tipoPedidoSeleccionado && bodegaSeleccionada;
 
   return (
-    <View style={styles.mainContainer}>
-      <ScrollView 
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <BackButton />
+      </View>
+
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -254,7 +254,7 @@ const SolicitarOrdenPedidoPage: React.FC = () => {
                     </View>
                   )}
                 </TouchableOpacity>
-                
+
                 {(!isFormValid) && (
                   <Text style={styles.warningText}>
                     ⚠ Debe seleccionar un tipo de pedido y una bodega para continuar
@@ -279,14 +279,17 @@ const SolicitarOrdenPedidoPage: React.FC = () => {
         mensaje={mensajeError}
         titulo="¡Atención!"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  safeArea: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  header: {
+    padding: Spacing.md,
   },
   scrollContent: {
     padding: Spacing.md,
@@ -297,6 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.background,
+    padding: Spacing.md,
   },
   loadingText: {
     marginTop: Spacing.md,
@@ -349,5 +353,4 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
 });
-
 export default SolicitarOrdenPedidoPage;

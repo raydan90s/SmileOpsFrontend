@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Edit, Trash2, Phone, Mail } from 'lucide-react-native';
+import { Edit, Trash2, Phone, Mail, CheckCircle } from 'lucide-react-native';
 import type { Proveedor } from '@models/administracion/Proveedores/Proveedor.types';
 import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@constants/theme';
 
@@ -8,6 +8,7 @@ interface ProveedorCardProps {
   proveedor: Proveedor;
   onEditar: (id: number) => void;
   onEliminar: (id: number) => void;
+  onActivar: (id: number) => void;
   getTipoNombre: (idTipo: number) => string;
 }
 
@@ -15,7 +16,8 @@ export default function ProveedorCard({
   proveedor,
   onEditar,
   onEliminar,
-  getTipoNombre
+  getTipoNombre,
+  onActivar,
 }: ProveedorCardProps) {
   return (
     <View style={styles.card}>
@@ -79,14 +81,25 @@ export default function ProveedorCard({
           <Text style={styles.editButtonText}>Editar</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.deleteButton]}
-          onPress={() => onEliminar(proveedor.iid_proveedor)}
-          activeOpacity={0.7}
-        >
-          <Trash2 size={18} color={Colors.error} />
-          <Text style={styles.deleteButtonText}>Eliminar</Text>
-        </TouchableOpacity>
+        {proveedor.bactivo ? (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.deleteButton]}
+            onPress={() => onEliminar(proveedor.iid_proveedor)}
+            activeOpacity={0.7}
+          >
+            <Trash2 size={18} color={Colors.error} />
+            <Text style={styles.deleteButtonText}>Eliminar</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.activateButton]}
+            onPress={() => onActivar(proveedor.iid_proveedor)}
+            activeOpacity={0.7}
+          >
+            <CheckCircle size={18} color={Colors.success} />
+            <Text style={styles.activateButtonText}>Activar</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -207,5 +220,14 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.sm,
     fontWeight: '600',
     color: Colors.error,
+  },
+  activateButton: {
+    backgroundColor: `${Colors.success}10`,
+    borderColor: Colors.success,
+  },
+  activateButtonText: {
+    fontSize: FontSizes.sm,
+    fontWeight: '600',
+    color: Colors.success,
   },
 });

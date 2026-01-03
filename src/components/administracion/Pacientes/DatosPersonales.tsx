@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
   TouchableOpacity,
   Modal,
   FlatList,
   Pressable,
+  Platform,
 } from 'react-native';
-import { ChevronDown, Check } from 'lucide-react-native';
+import { ChevronDown, Check, Calendar as CalendarIcon } from 'lucide-react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { ESTADOS_CIVILES, SEXOS } from '@data/constants';
 import FormField from '@components/shared/FormField';
 import FotoCircular from '@components/shared/FotoCircular';
@@ -42,6 +44,8 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
   const [showNacionalidadModal, setShowNacionalidadModal] = useState(false);
   const [showEstadoCivilModal, setShowEstadoCivilModal] = useState(false);
   const [showSexoModal, setShowSexoModal] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleImageSelect = (file: any | null) => {
     setHasNewImage(file !== null);
@@ -50,7 +54,28 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
     }
   };
 
+  const formatearFechaParaDB = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const paisSeleccionado = paises.find(p => p.iidpais.toString() === formData.nacionalidad);
+
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+
+    if (event.type === 'set' && selectedDate) {
+      setTempDate(selectedDate);
+      const fechaFormateada = formatearFechaParaDB(selectedDate);
+      onChange('fechaNacimiento', fechaFormateada);
+    } else if (event.type === 'dismissed') {
+      setShowDatePicker(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -145,13 +170,29 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
           </FormField>
 
           <FormField label="Fecha de Nacimiento" required>
-            <TextInput
-              style={styles.input}
-              value={formData.fechaNacimiento}
-              onChangeText={(value) => onChange('fechaNacimiento', value)}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={Theme.colors.placeholder}
-            />
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              style={styles.datePickerButton}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.dateText,
+                !formData.fechaNacimiento && styles.placeholderText
+              ]}>
+                {formData.fechaNacimiento || "Seleccione una fecha"}
+              </Text>
+              <CalendarIcon size={20} color={Theme.colors.placeholder} />
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                maximumDate={new Date()}
+              />
+            )}
           </FormField>
 
           <FormField label="Edad">
@@ -181,8 +222,8 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
               styles.selectButtonText,
               !paisSeleccionado && styles.selectButtonPlaceholder
             ]}>
-              {cargandoPaises 
-                ? 'Cargando...' 
+              {cargandoPaises
+                ? 'Cargando...'
                 : paisSeleccionado?.vnombre || 'Seleccione...'}
             </Text>
             <ChevronDown size={20} color={Theme.colors.placeholder} />
@@ -221,15 +262,14 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
           </TouchableOpacity>
         </FormField>
       </View>
-
       <Modal
         visible={showNacionalidadModal}
         transparent
         animationType="fade"
         onRequestClose={() => setShowNacionalidadModal(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay} 
+        <Pressable
+          style={styles.modalOverlay}
           onPress={() => setShowNacionalidadModal(false)}
         >
           <Pressable onPress={(e) => e.stopPropagation()}>
@@ -276,8 +316,8 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
         animationType="fade"
         onRequestClose={() => setShowEstadoCivilModal(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay} 
+        <Pressable
+          style={styles.modalOverlay}
           onPress={() => setShowEstadoCivilModal(false)}
         >
           <Pressable onPress={(e) => e.stopPropagation()}>
@@ -324,8 +364,8 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
         animationType="fade"
         onRequestClose={() => setShowSexoModal(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay} 
+        <Pressable
+          style={styles.modalOverlay}
           onPress={() => setShowSexoModal(false)}
         >
           <Pressable onPress={(e) => e.stopPropagation()}>
@@ -365,6 +405,7 @@ const DatosPersonales: React.FC<DatosPersonalesProps> = ({
           </Pressable>
         </Pressable>
       </Modal>
+
     </View>
   );
 };
@@ -404,6 +445,27 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.surfaceLight,
     color: Theme.colors.placeholder,
   },
+
+  datePickerButton: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: Theme.colors.borderDark,
+    borderRadius: Theme.borderRadius.md,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    backgroundColor: Theme.colors.surface,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: Theme.fontSizes.md,
+    color: Theme.colors.text,
+  },
+  placeholderText: {
+    color: Theme.colors.placeholder,
+  },
+
   additionalSection: {
     gap: Theme.spacing.md,
   },

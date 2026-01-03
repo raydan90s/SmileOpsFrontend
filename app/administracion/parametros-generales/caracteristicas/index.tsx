@@ -45,7 +45,6 @@ export default function CaracteristicasPage() {
       const data = await getAllCaracteristicas();
       setCaracteristicas(data);
     } catch (error) {
-      console.error('Error al cargar datos:', error);
       Alert.alert('Error', 'No se pudieron cargar las características');
     } finally {
       setLoading(false);
@@ -82,7 +81,6 @@ export default function CaracteristicasPage() {
               Alert.alert('Éxito', 'Característica eliminada exitosamente');
               cargarDatos();
             } catch (error) {
-              console.error('Error al eliminar:', error);
               Alert.alert('Error', 'No se pudo eliminar la característica');
             }
           },

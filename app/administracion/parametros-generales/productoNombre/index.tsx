@@ -42,7 +42,6 @@ export default function ProductosPage() {
       const data = await getAllProductosNombre();
       setProductosNombre(data);
     } catch (error) {
-      console.error('Error al cargar datos:', error);
       Alert.alert('Error', 'No se pudieron cargar los nombres de productos');
     } finally {
       setLoading(false);
@@ -79,7 +78,6 @@ export default function ProductosPage() {
               Alert.alert('Éxito', 'Nombre de producto eliminado exitosamente');
               cargarDatos();
             } catch (error) {
-              console.error('Error al eliminar:', error);
               Alert.alert('Error', 'No se pudo eliminar el nombre de producto');
             }
           },

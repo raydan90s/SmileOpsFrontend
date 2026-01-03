@@ -2,9 +2,7 @@ import {
   ShoppingCart, 
   ClipboardList, 
   PlusCircle, 
-  FileText, 
   Search,
-  Package
 } from 'lucide-react-native';
 import { MenuItem } from '@models/MenuItem/MenuItem.types';
 
@@ -14,14 +12,14 @@ export const menuItems: MenuItem[] = [
     title: 'Pedidos',
     subtitle: 'Gestión de órdenes y pedidos',
     icon: ShoppingCart,
-    route: '/inventario/pedidos',
+    route: '/inventario/pedidos',  
     children: [
       {
         id: 'estado-pedidos-ayudante',
         title: 'Estado de Pedidos',
         subtitle: 'Seguimiento de pedidos',
         icon: ClipboardList,
-        route: '/inventario/pedidos/estado',
+        route: '/inventario/pedidos/estado', 
       },
       {
         id: 'solicitar-ordenes-pedidos',
@@ -31,13 +29,6 @@ export const menuItems: MenuItem[] = [
         route: '/inventario/pedidos/solicitar',
       },
     ],
-  },
-  {
-    id: 'consultaMovimientoProductoEntregado',
-    title: 'Consulta Movimiento',
-    subtitle: 'Producto Entregado',
-    icon: Search,
-    route: '/inventario/consulta-movimiento',
   },
 ];
 

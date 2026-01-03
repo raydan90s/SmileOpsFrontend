@@ -8,6 +8,7 @@ import { Colors, Spacing, FontSizes } from '@constants/theme';
 interface ProveedoresListProps {
   proveedores: Proveedor[];
   onEditar: (id: number) => void;
+  onActivar: (id: number) => void;
   onEliminar: (id: number) => void;
   getTipoNombre: (idTipo: number) => string;
 }
@@ -16,6 +17,7 @@ export default function ProveedoresList({
   proveedores,
   onEditar,
   onEliminar,
+  onActivar,
   getTipoNombre
 }: ProveedoresListProps) {
   if (proveedores.length === 0) {
@@ -40,6 +42,7 @@ export default function ProveedoresList({
           onEditar={onEditar}
           onEliminar={onEliminar}
           getTipoNombre={getTipoNombre}
+          onActivar={onActivar}
         />
       )}
       contentContainerStyle={styles.listContent}

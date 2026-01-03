@@ -7,9 +7,11 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     TextInput,
+    Modal,
+    FlatList,
+    Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Picker } from '@react-native-picker/picker';
 import Calendario from '@components/odontologia/citas-medicas/Calendario';
 import FiltrosCalendario from '@components/odontologia/citas-medicas/FiltrosCalendario';
 import ModalExito from '@components/shared/ModalExito';
@@ -20,7 +22,7 @@ import type { PacienteForm } from '@models/Busqueda/PacienteForm.types';
 import { useDoctorContext } from '@context/DoctorContext';
 import { useConsultorios } from '@context/ConsultoriosContext';
 import { useAuth } from '@context/AuthContext';
-import Theme, { Spacing } from '@constants/theme';
+import Theme from '@constants/theme';
 import {
     crearCita,
     actualizarEstadoCita,
@@ -29,6 +31,7 @@ import {
 } from '@services/Citas/Citas.service';
 import type { NuevaCita } from '@models/Citas/Citas.types';
 import BackButton from '@components/shared/BackButton';
+import { ChevronDown, Check } from 'lucide-react-native';
 
 const CitasPage = () => {
     const [mesActual, setMesActual] = useState(new Date());
@@ -43,6 +46,10 @@ const CitasPage = () => {
     const [cargandoCitas, setCargandoCitas] = useState(true);
     const [filtroDoctor, setFiltroDoctor] = useState<string>('');
     const [filtroConsultorio, setFiltroConsultorio] = useState<string>('');
+    const [showDoctorModal, setShowDoctorModal] = useState(false);
+    const [showConsultorioModal, setShowConsultorioModal] = useState(false);
+    const [showTratamientoModal, setShowTratamientoModal] = useState(false);
+    const [showTiempoModal, setShowTiempoModal] = useState(false);
 
     const [formData, setFormData] = useState({
         codigo: '',
@@ -58,6 +65,7 @@ const CitasPage = () => {
     const { consultorios, loading: loadingConsultorios } = useConsultorios();
     const { usuario } = useAuth();
     const [doctorSeleccionado, setDoctorSeleccionado] = useState<string>('');
+    const [showHoraModal, setShowHoraModal] = useState(false);
 
     const ESPECIALIDAD_MAP: { [key: string]: number } = {
         Diagnostico: 1,
@@ -73,6 +81,36 @@ const CitasPage = () => {
         Ventas: 11,
         'Esp. Independientes': 12,
     };
+
+    const TRATAMIENTOS = [
+        'Diagnostico',
+        'Operatoria',
+        'Estetica Dental',
+        'Cirugía',
+        'Periodoncia',
+        'Ortodoncia',
+        'Endodoncia',
+        'Prótesis Removibles',
+        'Prótesis Fija',
+        'Implantes',
+        'Ventas',
+        'Esp. Independientes',
+    ];
+
+    const TIEMPOS = ['15 Minutos', '30 Minutos', '60 Minutos', '120 Minutos'];
+
+    const generarHoras = () => {
+        const horas = [];
+        for (let h = 7; h <= 20; h++) {
+            for (let m = 0; m < 60; m += 15) {
+                const hora = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                horas.push(hora);
+            }
+        }
+        return horas;
+    };
+
+    const HORAS_DISPONIBLES = generarHoras();
 
     const ESPECIALIDAD_REVERSE_MAP: { [key: number]: string } = {
         1: 'Diagnostico',
@@ -149,7 +187,6 @@ const CitasPage = () => {
                 });
                 setCitas(citasFormateadas);
             } catch (error) {
-                console.error('❌ Error al cargar citas:', error);
                 setMensajeError('Error al cargar las citas desde la base de datos');
                 setMostrarModalError(true);
             } finally {
@@ -315,7 +352,6 @@ const CitasPage = () => {
             setMensajeExito('La cita ha sido agendada correctamente');
             setMostrarModalExito(true);
         } catch (error) {
-            console.error('Error al agendar cita:', error);
             setMensajeError(
                 error instanceof Error
                     ? error.message
@@ -347,7 +383,6 @@ const CitasPage = () => {
             setMensajeExito('Estado de la cita actualizado correctamente');
             setMostrarModalExito(true);
         } catch (error) {
-            console.error('Error al cambiar estado de cita:', error);
             setMensajeError(
                 error instanceof Error
                     ? error.message
@@ -365,7 +400,6 @@ const CitasPage = () => {
             setMensajeExito('Cita eliminada correctamente');
             setMostrarModalExito(true);
         } catch (error) {
-            console.error('Error al eliminar cita:', error);
             setMensajeError(
                 error instanceof Error ? error.message : 'Error al eliminar la cita'
             );
@@ -427,23 +461,70 @@ const CitasPage = () => {
                                 <View style={styles.formCard}>
                                     <View style={styles.formGroup}>
                                         <Text style={styles.label}>Seleccionar Doctor</Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-                                                selectedValue={doctorSeleccionado}
-                                                onValueChange={(value) => setDoctorSeleccionado(value)}
-                                                enabled={!guardandoCita}
-                                            >
-                                                <Picker.Item label="Seleccione Un Doctor" value="" />
-                                                {doctores.map((d) => (
-                                                    <Picker.Item
-                                                        key={d.iiddoctor}
-                                                        label={`${d.nombreCompleto} (${d.iiddoctor})`}
-                                                        value={d.iiddoctor.toString()}
-                                                    />
-                                                ))}
-                                            </Picker>
-                                        </View>
+                                        <TouchableOpacity
+                                            style={styles.selectButton}
+                                            onPress={() => setShowDoctorModal(true)}
+                                            disabled={guardandoCita}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={[
+                                                styles.selectButtonText,
+                                                !doctorSeleccionado && styles.selectButtonPlaceholder
+                                            ]}>
+                                                {doctorSeleccionado
+                                                    ? doctores.find(d => d.iiddoctor.toString() === doctorSeleccionado)?.nombreCompleto
+                                                    : 'Seleccione Un Doctor'}
+                                            </Text>
+                                            <ChevronDown size={20} color={Theme.colors.placeholder} />
+                                        </TouchableOpacity>
                                     </View>
+
+                                    <Modal
+                                        visible={showDoctorModal}
+                                        transparent
+                                        animationType="fade"
+                                        onRequestClose={() => setShowDoctorModal(false)}
+                                    >
+                                        <Pressable style={styles.modalOverlay} onPress={() => setShowDoctorModal(false)}>
+                                            <Pressable onPress={(e) => e.stopPropagation()}>
+                                                <View style={styles.modalContent}>
+                                                    <View style={styles.modalHeader}>
+                                                        <Text style={styles.modalTitle}>Seleccionar Doctor</Text>
+                                                    </View>
+                                                    <FlatList
+                                                        data={doctores}
+                                                        keyExtractor={(item) => item.iiddoctor.toString()}
+                                                        renderItem={({ item }) => (
+                                                            <TouchableOpacity
+                                                                style={styles.modalItem}
+                                                                onPress={() => {
+                                                                    setDoctorSeleccionado(item.iiddoctor.toString());
+                                                                    setShowDoctorModal(false);
+                                                                }}
+                                                                activeOpacity={0.7}
+                                                            >
+                                                                <Text style={styles.modalItemText}>
+                                                                    {item.nombreCompleto} ({item.iiddoctor})
+                                                                </Text>
+                                                                {doctorSeleccionado === item.iiddoctor.toString() && (
+                                                                    <Check size={20} color={Theme.colors.primary} />
+                                                                )}
+                                                            </TouchableOpacity>
+                                                        )}
+                                                        ItemSeparatorComponent={() => <View style={styles.separator} />}
+                                                        style={styles.modalList}
+                                                    />
+                                                    <TouchableOpacity
+                                                        style={styles.modalCloseButton}
+                                                        onPress={() => setShowDoctorModal(false)}
+                                                        activeOpacity={0.8}
+                                                    >
+                                                        <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </Pressable>
+                                        </Pressable>
+                                    </Modal>
 
                                     <View style={styles.formGroup}>
                                         <Text style={styles.sectionTitle}>Datos del Paciente</Text>
@@ -459,93 +540,248 @@ const CitasPage = () => {
 
                                     <View style={styles.formGroup}>
                                         <Text style={styles.label}>Consultorio:</Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-                                                selectedValue={formData.consultorio}
-                                                onValueChange={(value) =>
-                                                    handleInputChange('consultorio', value)
-                                                }
-                                                enabled={!guardandoCita && !loadingConsultorios}
-                                            >
-                                                {consultoriosActivos.length === 0 ? (
-                                                    <Picker.Item
-                                                        label="No hay consultorios disponibles"
-                                                        value=""
-                                                    />
-                                                ) : (
-                                                    consultoriosActivos.map((consultorio) => (
-                                                        <Picker.Item
-                                                            key={consultorio.iidconsultorio}
-                                                            label={consultorio.vnombre}
-                                                            value={consultorio.iidconsultorio.toString()}
-                                                        />
-                                                    ))
-                                                )}
-                                            </Picker>
-                                        </View>
+                                        <TouchableOpacity
+                                            style={styles.selectButton}
+                                            onPress={() => setShowConsultorioModal(true)}
+                                            disabled={guardandoCita || loadingConsultorios}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={[
+                                                styles.selectButtonText,
+                                                !formData.consultorio && styles.selectButtonPlaceholder
+                                            ]}>
+                                                {formData.consultorio
+                                                    ? consultoriosActivos.find(c => c.iidconsultorio.toString() === formData.consultorio)?.vnombre
+                                                    : 'Seleccione consultorio'}
+                                            </Text>
+                                            <ChevronDown size={20} color={Theme.colors.placeholder} />
+                                        </TouchableOpacity>
                                     </View>
+
+                                    <Modal
+                                        visible={showConsultorioModal}
+                                        transparent
+                                        animationType="fade"
+                                        onRequestClose={() => setShowConsultorioModal(false)}
+                                    >
+                                        <Pressable style={styles.modalOverlay} onPress={() => setShowConsultorioModal(false)}>
+                                            <Pressable onPress={(e) => e.stopPropagation()}>
+                                                <View style={styles.modalContent}>
+                                                    <View style={styles.modalHeader}>
+                                                        <Text style={styles.modalTitle}>Seleccionar Consultorio</Text>
+                                                    </View>
+                                                    <FlatList
+                                                        data={consultoriosActivos}
+                                                        keyExtractor={(item) => item.iidconsultorio.toString()}
+                                                        renderItem={({ item }) => (
+                                                            <TouchableOpacity
+                                                                style={styles.modalItem}
+                                                                onPress={() => {
+                                                                    handleInputChange('consultorio', item.iidconsultorio.toString());
+                                                                    setShowConsultorioModal(false);
+                                                                }}
+                                                                activeOpacity={0.7}
+                                                            >
+                                                                <Text style={styles.modalItemText}>{item.vnombre}</Text>
+                                                                {formData.consultorio === item.iidconsultorio.toString() && (
+                                                                    <Check size={20} color={Theme.colors.primary} />
+                                                                )}
+                                                            </TouchableOpacity>
+                                                        )}
+                                                        ItemSeparatorComponent={() => <View style={styles.separator} />}
+                                                        style={styles.modalList}
+                                                    />
+                                                    <TouchableOpacity
+                                                        style={styles.modalCloseButton}
+                                                        onPress={() => setShowConsultorioModal(false)}
+                                                        activeOpacity={0.8}
+                                                    >
+                                                        <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </Pressable>
+                                        </Pressable>
+                                    </Modal>
 
                                     <View style={styles.formGroup}>
                                         <Text style={styles.label}>Tratamiento de:</Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-                                                selectedValue={formData.tratamiento}
-                                                onValueChange={(value) =>
-                                                    handleInputChange('tratamiento', value)
-                                                }
-                                                enabled={!guardandoCita}
-                                            >
-                                                <Picker.Item label="Diagnostico" value="Diagnostico" />
-                                                <Picker.Item label="Operatoria" value="Operatoria" />
-                                                <Picker.Item label="Estetica Dental" value="Estetica Dental" />
-                                                <Picker.Item label="Cirugía" value="Cirugía" />
-                                                <Picker.Item label="Periodoncia" value="Periodoncia" />
-                                                <Picker.Item label="Ortodoncia" value="Ortodoncia" />
-                                                <Picker.Item label="Endodoncia" value="Endodoncia" />
-                                                <Picker.Item
-                                                    label="Prótesis Removibles"
-                                                    value="Prótesis Removibles"
-                                                />
-                                                <Picker.Item label="Prótesis Fija" value="Prótesis Fija" />
-                                                <Picker.Item label="Implantes" value="Implantes" />
-                                                <Picker.Item label="Ventas" value="Ventas" />
-                                                <Picker.Item
-                                                    label="Esp. Independientes"
-                                                    value="Esp. Independientes"
-                                                />
-                                            </Picker>
-                                        </View>
+                                        <TouchableOpacity
+                                            style={styles.selectButton}
+                                            onPress={() => setShowTratamientoModal(true)}
+                                            disabled={guardandoCita}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={styles.selectButtonText}>{formData.tratamiento}</Text>
+                                            <ChevronDown size={20} color={Theme.colors.placeholder} />
+                                        </TouchableOpacity>
                                     </View>
+
+                                    <Modal
+                                        visible={showTratamientoModal}
+                                        transparent
+                                        animationType="fade"
+                                        onRequestClose={() => setShowTratamientoModal(false)}
+                                    >
+                                        <Pressable style={styles.modalOverlay} onPress={() => setShowTratamientoModal(false)}>
+                                            <Pressable onPress={(e) => e.stopPropagation()}>
+                                                <View style={styles.modalContent}>
+                                                    <View style={styles.modalHeader}>
+                                                        <Text style={styles.modalTitle}>Seleccionar Tratamiento</Text>
+                                                    </View>
+                                                    <FlatList
+                                                        data={TRATAMIENTOS}
+                                                        keyExtractor={(item) => item}
+                                                        renderItem={({ item }) => (
+                                                            <TouchableOpacity
+                                                                style={styles.modalItem}
+                                                                onPress={() => {
+                                                                    handleInputChange('tratamiento', item);
+                                                                    setShowTratamientoModal(false);
+                                                                }}
+                                                                activeOpacity={0.7}
+                                                            >
+                                                                <Text style={styles.modalItemText}>{item}</Text>
+                                                                {formData.tratamiento === item && (
+                                                                    <Check size={20} color={Theme.colors.primary} />
+                                                                )}
+                                                            </TouchableOpacity>
+                                                        )}
+                                                        ItemSeparatorComponent={() => <View style={styles.separator} />}
+                                                        style={styles.modalList}
+                                                    />
+                                                    <TouchableOpacity
+                                                        style={styles.modalCloseButton}
+                                                        onPress={() => setShowTratamientoModal(false)}
+                                                        activeOpacity={0.8}
+                                                    >
+                                                        <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </Pressable>
+                                        </Pressable>
+                                    </Modal>
 
                                     <View style={styles.row}>
                                         <View style={styles.halfWidth}>
                                             <Text style={styles.label}>Hora de la cita</Text>
-                                            <TextInput
-                                                style={styles.input}
-                                                value={formData.horaCita}
-                                                onChangeText={(value) => handleInputChange('horaCita', value)}
-                                                placeholder="HH:MM"
-                                                editable={!guardandoCita}
-                                            />
+                                            <TouchableOpacity
+                                                style={styles.selectButton}
+                                                onPress={() => setShowHoraModal(true)}
+                                                disabled={guardandoCita}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={[
+                                                    styles.selectButtonText,
+                                                    !formData.horaCita && styles.selectButtonPlaceholder
+                                                ]}>
+                                                    {formData.horaCita || 'Seleccionar hora'}
+                                                </Text>
+                                                <ChevronDown size={20} color={Theme.colors.placeholder} />
+                                            </TouchableOpacity>
                                         </View>
+
+                                        <Modal
+                                            visible={showHoraModal}
+                                            transparent
+                                            animationType="fade"
+                                            onRequestClose={() => setShowHoraModal(false)}
+                                        >
+                                            <Pressable style={styles.modalOverlay} onPress={() => setShowHoraModal(false)}>
+                                                <Pressable onPress={(e) => e.stopPropagation()}>
+                                                    <View style={styles.modalContent}>
+                                                        <View style={styles.modalHeader}>
+                                                            <Text style={styles.modalTitle}>Seleccionar Hora</Text>
+                                                        </View>
+                                                        <FlatList
+                                                            data={HORAS_DISPONIBLES}
+                                                            keyExtractor={(item) => item}
+                                                            renderItem={({ item }) => (
+                                                                <TouchableOpacity
+                                                                    style={styles.modalItem}
+                                                                    onPress={() => {
+                                                                        handleInputChange('horaCita', item);
+                                                                        setShowHoraModal(false);
+                                                                    }}
+                                                                    activeOpacity={0.7}
+                                                                >
+                                                                    <Text style={styles.modalItemText}>{item}</Text>
+                                                                    {formData.horaCita === item && (
+                                                                        <Check size={20} color={Theme.colors.primary} />
+                                                                    )}
+                                                                </TouchableOpacity>
+                                                            )}
+                                                            ItemSeparatorComponent={() => <View style={styles.separator} />}
+                                                            style={styles.modalList}
+                                                        />
+                                                        <TouchableOpacity
+                                                            style={styles.modalCloseButton}
+                                                            onPress={() => setShowHoraModal(false)}
+                                                            activeOpacity={0.8}
+                                                        >
+                                                            <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </Pressable>
+                                            </Pressable>
+                                        </Modal>
 
                                         <View style={styles.halfWidth}>
                                             <Text style={styles.label}>Tiempo Estimado:</Text>
-                                            <View style={styles.pickerContainer}>
-                                                <Picker
-                                                    selectedValue={formData.tiempoEstimado}
-                                                    onValueChange={(value) =>
-                                                        handleInputChange('tiempoEstimado', value)
-                                                    }
-                                                    enabled={!guardandoCita}
-                                                >
-                                                    <Picker.Item label="15 Minutos" value="15 Minutos" />
-                                                    <Picker.Item label="30 Minutos" value="30 Minutos" />
-                                                    <Picker.Item label="60 Minutos" value="60 Minutos" />
-                                                    <Picker.Item label="120 Minutos" value="120 Minutos" />
-                                                </Picker>
-                                            </View>
+                                            <TouchableOpacity
+                                                style={styles.selectButton}
+                                                onPress={() => setShowTiempoModal(true)}
+                                                disabled={guardandoCita}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={styles.selectButtonText}>{formData.tiempoEstimado}</Text>
+                                                <ChevronDown size={20} color={Theme.colors.placeholder} />
+                                            </TouchableOpacity>
                                         </View>
+
+                                        <Modal
+                                            visible={showTiempoModal}
+                                            transparent
+                                            animationType="fade"
+                                            onRequestClose={() => setShowTiempoModal(false)}
+                                        >
+                                            <Pressable style={styles.modalOverlay} onPress={() => setShowTiempoModal(false)}>
+                                                <Pressable onPress={(e) => e.stopPropagation()}>
+                                                    <View style={styles.modalContent}>
+                                                        <View style={styles.modalHeader}>
+                                                            <Text style={styles.modalTitle}>Seleccionar Tiempo</Text>
+                                                        </View>
+                                                        <FlatList
+                                                            data={TIEMPOS}
+                                                            keyExtractor={(item) => item}
+                                                            renderItem={({ item }) => (
+                                                                <TouchableOpacity
+                                                                    style={styles.modalItem}
+                                                                    onPress={() => {
+                                                                        handleInputChange('tiempoEstimado', item);
+                                                                        setShowTiempoModal(false);
+                                                                    }}
+                                                                    activeOpacity={0.7}
+                                                                >
+                                                                    <Text style={styles.modalItemText}>{item}</Text>
+                                                                    {formData.tiempoEstimado === item && (
+                                                                        <Check size={20} color={Theme.colors.primary} />
+                                                                    )}
+                                                                </TouchableOpacity>
+                                                            )}
+                                                            ItemSeparatorComponent={() => <View style={styles.separator} />}
+                                                            style={styles.modalList}
+                                                        />
+                                                        <TouchableOpacity
+                                                            style={styles.modalCloseButton}
+                                                            onPress={() => setShowTiempoModal(false)}
+                                                            activeOpacity={0.8}
+                                                        >
+                                                            <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </Pressable>
+                                            </Pressable>
+                                        </Modal>
                                     </View>
 
                                     <TouchableOpacity
@@ -587,119 +823,194 @@ const CitasPage = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    padding: Theme.spacing.md,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.lg,
-  },
-  loadingText: {
-    marginTop: Theme.spacing.md,
-    fontSize: Theme.fontSizes.md,
-    color: Theme.colors.placeholder,
-  },
-  content: {
-    padding: Theme.spacing.xs,
-  },
-  card: {
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.md,
-    ...Theme.shadows.md,
-  },
-  title: {
-    fontSize: Theme.fontSizes.lg,
-    fontWeight: Theme.fontWeights.bold,
-    color: Theme.colors.text,
-    marginBottom: Theme.spacing.md,
-  },
-  mainGrid: {
-    gap: Theme.spacing.md,
-  },
-  calendarioSection: {
-    marginBottom: Theme.spacing.md,
-  },
-  formSection: {
-    marginBottom: Theme.spacing.md,
-  },
-  formCard: {
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.borderRadius.md,
-    overflow: 'hidden',
-    backgroundColor: Theme.colors.surface,
-  },
-  formGroup: {
-    padding: Theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
-  },
-  sectionTitle: {
-    fontSize: Theme.fontSizes.sm,
-    fontWeight: Theme.fontWeights.semibold,
-    color: Theme.colors.primary,
-    marginBottom: Theme.spacing.sm,
-  },
-  label: {
-    fontSize: Theme.fontSizes.xs,
-    fontWeight: Theme.fontWeights.semibold,
-    color: Theme.colors.primary,
-    marginBottom: Theme.spacing.sm,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: Theme.colors.borderDark,
-    borderRadius: Theme.borderRadius.md,
-    overflow: 'hidden',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: Theme.colors.borderDark,
-    borderRadius: Theme.borderRadius.md,
-    paddingHorizontal: Theme.spacing.sm + 2,
-    paddingVertical: Theme.spacing.sm - 2,
-    fontSize: Theme.fontSizes.sm,
-    color: Theme.colors.text,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-    padding: Theme.spacing.md,
-  },
-  halfWidth: {
-    flex: 1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Theme.colors.border,
-  },
-  submitButton: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: Theme.spacing.sm + 2,
-    borderRadius: Theme.borderRadius.md,
-    margin: Theme.spacing.md,
-    ...Theme.shadows.sm,
-  },
-  submitButtonDisabled: {
-    backgroundColor: Theme.colors.placeholder,
-    opacity: Theme.opacity.disabled,
-  },
-  submitButtonText: {
-    color: Theme.colors.textInverse,
-    fontSize: Theme.fontSizes.sm,
-    fontWeight: Theme.fontWeights.semibold,
-    textAlign: 'center',
-  },
+    container: {
+        flex: 1,
+        backgroundColor: Theme.colors.background,
+    },
+    header: {
+        padding: Theme.spacing.md,
+    },
+    scrollContainer: {
+        flex: 1,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Theme.spacing.lg,
+    },
+    loadingText: {
+        marginTop: Theme.spacing.md,
+        fontSize: Theme.fontSizes.md,
+        color: Theme.colors.placeholder,
+    },
+    content: {
+        padding: Theme.spacing.xs,
+    },
+    card: {
+        backgroundColor: Theme.colors.surface,
+        borderRadius: Theme.borderRadius.lg,
+        padding: Theme.spacing.md,
+        ...Theme.shadows.md,
+    },
+    title: {
+        fontSize: Theme.fontSizes.lg,
+        fontWeight: Theme.fontWeights.bold,
+        color: Theme.colors.text,
+        marginBottom: Theme.spacing.md,
+    },
+    mainGrid: {
+        gap: Theme.spacing.md,
+    },
+    calendarioSection: {
+        marginBottom: Theme.spacing.md,
+    },
+    formSection: {
+        marginBottom: Theme.spacing.md,
+    },
+    formCard: {
+        borderWidth: 1,
+        borderColor: Theme.colors.border,
+        borderRadius: Theme.borderRadius.md,
+        overflow: 'hidden',
+        backgroundColor: Theme.colors.surface,
+    },
+    formGroup: {
+        padding: Theme.spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: Theme.colors.border,
+    },
+    sectionTitle: {
+        fontSize: Theme.fontSizes.sm,
+        fontWeight: Theme.fontWeights.semibold,
+        color: Theme.colors.primary,
+        marginBottom: Theme.spacing.sm,
+    },
+    label: {
+        fontSize: Theme.fontSizes.xs,
+        fontWeight: Theme.fontWeights.semibold,
+        color: Theme.colors.primary,
+        marginBottom: Theme.spacing.sm,
+    },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: Theme.colors.borderDark,
+        borderRadius: Theme.borderRadius.md,
+        overflow: 'hidden',
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: Theme.colors.borderDark,
+        borderRadius: Theme.borderRadius.md,
+        paddingHorizontal: Theme.spacing.sm + 2,
+        paddingVertical: Theme.spacing.sm - 2,
+        fontSize: Theme.fontSizes.sm,
+        color: Theme.colors.text,
+    },
+    row: {
+        flexDirection: 'row',
+        gap: Theme.spacing.sm,
+        padding: Theme.spacing.md,
+    },
+    halfWidth: {
+        flex: 1,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: Theme.colors.border,
+    },
+    submitButton: {
+        backgroundColor: Theme.colors.primary,
+        paddingVertical: Theme.spacing.sm + 2,
+        borderRadius: Theme.borderRadius.md,
+        margin: Theme.spacing.md,
+        ...Theme.shadows.sm,
+    },
+    submitButtonDisabled: {
+        backgroundColor: Theme.colors.placeholder,
+        opacity: Theme.opacity.disabled,
+    },
+    submitButtonText: {
+        color: Theme.colors.textInverse,
+        fontSize: Theme.fontSizes.sm,
+        fontWeight: Theme.fontWeights.semibold,
+        textAlign: 'center',
+    },
+    selectButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: Theme.colors.surface,
+        borderWidth: 1,
+        borderColor: Theme.colors.borderDark,
+        borderRadius: Theme.borderRadius.md,
+        paddingHorizontal: Theme.spacing.md,
+        paddingVertical: Theme.spacing.sm,
+    },
+    selectButtonText: {
+        fontSize: Theme.fontSizes.sm,
+        color: Theme.colors.text,
+        flex: 1,
+    },
+    selectButtonPlaceholder: {
+        color: Theme.colors.placeholder,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Theme.spacing.md,
+    },
+    modalContent: {
+        backgroundColor: Theme.colors.surface,
+        borderRadius: Theme.borderRadius.lg,
+        width: '100%',
+        maxWidth: 400,
+        maxHeight: '70%',
+        overflow: 'hidden',
+        ...Theme.shadows.xl,
+    },
+    modalHeader: {
+        padding: Theme.spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: Theme.colors.border,
+    },
+    modalTitle: {
+        fontSize: Theme.fontSizes.md,
+        fontWeight: Theme.fontWeights.bold,
+        color: Theme.colors.text,
+    },
+    modalList: {
+        maxHeight: 400,
+    },
+    modalItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: Theme.spacing.md,
+    },
+    modalItemText: {
+        fontSize: Theme.fontSizes.sm,
+        color: Theme.colors.text,
+        flex: 1,
+    },
+    separator: {
+        height: 1,
+        backgroundColor: Theme.colors.border,
+    },
+    modalCloseButton: {
+        backgroundColor: Theme.colors.primary,
+        padding: Theme.spacing.md,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: Theme.colors.border,
+    },
+    modalCloseButtonText: {
+        color: Theme.colors.textInverse,
+        fontSize: Theme.fontSizes.sm,
+        fontWeight: Theme.fontWeights.semibold,
+    },
 });
 
 export default CitasPage;

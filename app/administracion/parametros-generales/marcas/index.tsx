@@ -39,7 +39,6 @@ export default function MarcasPage() {
       const data = await getAllMarcas();
       setMarcas(data);
     } catch (error) {
-      console.error('Error al cargar datos:', error);
       Alert.alert('Error', 'No se pudieron cargar las marcas');
     } finally {
       setLoading(false);
@@ -74,7 +73,6 @@ export default function MarcasPage() {
               Alert.alert('Éxito', 'Marca eliminada exitosamente');
               cargarDatos();
             } catch (error) {
-              console.error('Error al eliminar:', error);
               Alert.alert('Error', 'No se pudo eliminar la marca');
             }
           },
