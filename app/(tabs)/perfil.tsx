@@ -52,7 +52,7 @@ export default function PerfilScreen() {
                 >
                     <Ionicons name="help-circle-outline" size={24} color={Colors.text} />
                     <Text style={styles.opcionTexto}>Ayuda y Soporte</Text>
-                    <Ionicons name="chevron-forward" size={24} color={Colors.textLight} />
+                    <Ionicons name="chevron-forward" size={24} color={Colors.primary} />
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     },
     ayudaDescripcion: {
         fontSize: FontSizes.sm,
-        color: Colors.textLight,
+        color: Colors.primary,
     },
     modalButton: {
         backgroundColor: Colors.primary,
