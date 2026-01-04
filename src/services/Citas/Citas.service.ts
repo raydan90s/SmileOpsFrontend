@@ -4,7 +4,6 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export async function crearCita(cita: NuevaCita) {
   try {
-    // Transformar los nombres de las propiedades a lowercase para el backend
     const citaAPI = {
       iidpaciente: cita.iIdPaciente,
       iiddoctor: cita.iIdDoctor,
@@ -17,14 +16,12 @@ export async function crearCita(cita: NuevaCita) {
       vusuarioing: cita.vUsuarioIng,
     };
 
-    console.log('📤 Enviando al backend:', citaAPI); // ← Para debug
-
     const res = await fetch(`${API_URL}/citas`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(citaAPI), // ← Enviar citaAPI en lugar de cita
+      body: JSON.stringify(citaAPI), 
     });
 
     if (!res.ok) {
@@ -42,7 +39,6 @@ export async function crearCita(cita: NuevaCita) {
     
     throw new Error('Respuesta inválida del servidor');
   } catch (err) {
-    console.error('Error crearCita:', err);
     throw err;
   }
 }
@@ -82,7 +78,6 @@ export async function actualizarEstadoCita(
     
     throw new Error('Respuesta inválida del servidor');
   } catch (err) {
-    console.error('Error actualizarEstadoCita:', err);
     throw err;
   }
 }
@@ -114,7 +109,6 @@ export async function eliminarCita(citaId: string) {
     
     throw new Error('Respuesta inválida del servidor');
   } catch (err) {
-    console.error('Error eliminarCita:', err);
     throw err;
   }
 }
@@ -140,7 +134,6 @@ export async function obtenerCitas() {
     
     throw new Error('Respuesta inválida del servidor');
   } catch (err) {
-    console.error('Error obtenerCitas:', err);
     throw err;
   }
 }

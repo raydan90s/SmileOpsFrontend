@@ -87,10 +87,9 @@ export const useBusquedaPaciente = ({
           buscando: false,
           error: '',
           tipoBusqueda: tipo,
-          terminoBusqueda: '', // ← LIMPIAR AQUÍ
+          terminoBusqueda: '',
         }));
 
-        // ✅ SOLO llamar si es un paciente único (no array)
         if (!Array.isArray(resultado)) {
           onPacienteSeleccionado?.(resultado);
         }
@@ -115,7 +114,6 @@ export const useBusquedaPaciente = ({
     try {
       let pacienteCompleto: PacienteForm | null = null;
 
-      // Si viene de una lista, buscar el paciente completo
       if (Array.isArray(state.pacienteEncontrado)) {
         pacienteCompleto = await buscarPacientePorCodigo(paciente.codigo);
       } else {
@@ -126,10 +124,9 @@ export const useBusquedaPaciente = ({
         setState(prev => ({
           ...prev,
           pacienteEncontrado: pacienteCompleto,
-          terminoBusqueda: '', // ← LIMPIAR TAMBIÉN AQUÍ
+          terminoBusqueda: '',
         }));
 
-        // ✅ Llamar al callback con el paciente completo
         onPacienteSeleccionado?.(pacienteCompleto);
       }
     } catch (err) {

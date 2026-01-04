@@ -17,7 +17,7 @@ export interface Module {
 }
 
 export const allModules: Module[] = [
-  { key: 'administracion', name: 'Administración', icon: Users, color: '#2e2f93' },
+  { key: 'administracion', name: 'Administrar', icon: Users, color: '#2e2f93' },
   { key: 'odontologia', name: 'Odontología', icon: Smile, color: '#2e2f93' },
   { key: 'inventario', name: 'Inventario', icon: Package, color: '#2e2f93' },
 ];

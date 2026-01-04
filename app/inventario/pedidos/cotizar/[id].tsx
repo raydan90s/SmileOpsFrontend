@@ -17,7 +17,6 @@ import {
   fetchNextPedidoId,
   getPedidoById,
   cotizarPedido,
-  aprobarCotizacionFinal
 } from '@services/Pedidos/Pedidos.service';
 import { fetchBodegasPrincipales } from '@services/Bodegas/bodegas.service';
 import { fetchAllProveedores } from '@services/Proveedores/Proveedores.service';
@@ -230,10 +229,6 @@ const CotizarOrdenPedidoPage: React.FC = () => {
           detalles: detallesCotizacion,
           iid_proveedor: parseInt(proveedorSeleccionado),
           v_observaciones: observaciones.trim() || undefined,
-        });
-
-        await aprobarCotizacionFinal(parseInt(pedidoId), {
-          v_observaciones: observaciones.trim() || undefined
         });
 
         setModalExitoAbierto(true);
