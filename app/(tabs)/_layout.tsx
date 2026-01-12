@@ -50,6 +50,20 @@ export default function TabLayout() {
                     ),
                 }}
             />
+
+            <Tabs.Screen
+                name="apiPublica"
+                options={{
+                    title: 'apiPublica',
+                    tabBarIcon: ({ color, focused }) => (
+                        <Ionicons
+                            name={focused ? 'person' : 'person-outline'}
+                            size={28}
+                            color={color}
+                        />
+                    ),
+                }}
+            />
         </Tabs>
     );
 }

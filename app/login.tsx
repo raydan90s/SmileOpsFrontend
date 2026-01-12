@@ -14,22 +14,26 @@ import {
 import { Lock, Mail } from 'lucide-react-native';
 import { useAuth } from '@context/AuthContext';
 import { Colors, Spacing, BorderRadius, FontSizes, Shadows } from '@constants/theme';
-import { useRouter } from 'expo-router'; 
+import { useRouter } from 'expo-router';
+import BackButton from '@components/shared/BackButton';
 
-const Logo = require('@assets/icon.png'); 
+const Logo = require('@assets/icon.png');
 
 export default function LoginPage() {
   const [usuarioInput, setUsuarioInput] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  
-  const { usuario, login, loading } = useAuth();
-  const router = useRouter(); 
 
+  const { usuario, login, loading } = useAuth();
+  const router = useRouter();
+
+  const handleback = () => {
+    router.replace("/noseguridad")
+  };
   useEffect(() => {
     if (usuario && !loading) {
-      router.replace('/(tabs)'); 
+      router.replace('/(tabs)');
     }
   }, [usuario, loading]);
 
@@ -118,6 +122,15 @@ export default function LoginPage() {
             ) : (
               <Text style={styles.buttonText}>Iniciar Sesión</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+
+            onPress={handleback}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>Volver no seguridad</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
